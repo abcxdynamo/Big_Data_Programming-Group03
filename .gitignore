@@ -1,1 +1,8 @@
 .DS_Store
+.idea
+node_modules/
+venv/
+.venv/
+dist/
+__pycache__
+docker/mysql-data
