@@ -3,12 +3,17 @@
 ## dependency
 python@3.13.2
 
+## database
 mysql@9.2.0
-- way to start mysql server in docker
+
+way to start mysql server in docker
 ```shell
 $ cd docker/
 $ docker-compose up -d 
 ```
+
+**OR YOU CAN JUST USE YOUR LOCAL MYSQL SERVER, edit DB_URI in config.py**
+
 
 ## server install 
 - MacOS
