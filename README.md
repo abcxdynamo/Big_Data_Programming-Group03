@@ -1,0 +1,3 @@
+# Performa - Student Performance Reflector
+### Purpose
+The Student Performance Reflector is designed to provide a data-driven approach to track and analyze student performance. The system aims to help students gain valuable insights into academic progress, attendance trends, co-op placements and future career performance predictions. The system allows instructors, and administrators to update student academic records and course information respectively for achieving the intended functionality. By leveraging predictive analytics and reporting, the system enables early intervention for struggling students and helps students to improve performance for adapting with industrial standards over time.
