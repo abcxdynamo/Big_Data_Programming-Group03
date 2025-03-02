@@ -1,5 +1,22 @@
 # Performa Frontend
 
+## dependencies
+- node.js@latest (install the latest node.js)
+- npm@latest (install the latest npm)
+- vue3@latest https://vuejs.org/guide/quick-start.html
+- element-plus https://element-plus.org/en-US/guide/quickstart.html
+
+## quick start
+```shell
+$ npm install
+$ npm run dev
+```
+
+
+--------------
+
+# Origin README
+
 This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup
