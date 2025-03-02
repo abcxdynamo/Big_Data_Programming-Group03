@@ -6,3 +6,32 @@ venv/
 dist/
 __pycache__
 docker/mysql-data
+.vite-ssg-temp
+node_modules
+dist
+dist-ssr
+*.local
+# lock
+yarn.lock
+#package-lock.json
+*.log
+.vscode
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+coverage
+/cypress/videos/
+/cypress/screenshots/
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.tsbuildinfo

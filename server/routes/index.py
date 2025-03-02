@@ -25,8 +25,7 @@ def login():
     """ user login """
     data = request.parsed_data
     email, otp = data.get('email'), data.get('otp')
-    jwt_token = UserService.validate_otp(email, otp)
-    return {"token": jwt_token}
+    return UserService.validate_otp(email, otp)
 
 
 @index_bp.route('/ping', methods=['GET'])
