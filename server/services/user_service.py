@@ -56,7 +56,13 @@ class UserService:
         })
         user_token.token = token
         user_token.save()
-        return token
+        return {
+            "user_id": user.id,
+            "email": user.email,
+            "role_id": user_role.id,
+            "role_name": user_role.name,
+            "token": token
+        }
 
     @staticmethod
     def test():
