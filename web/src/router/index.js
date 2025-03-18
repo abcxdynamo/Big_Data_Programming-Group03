@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import localStore from '../utils/store'
 import {createRouter, createWebHistory} from 'vue-router'
 import Index from '../views/Index.vue'
 import Login from '../views/Login.vue'
@@ -26,8 +27,9 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     let user = {}
     try {
-        user = JSON.parse(localStorage.getItem('user') || '{}')
+        user = JSON.parse(localStore.get('user') || '{}')
     } catch (e) {
+        print(e)
     }
     if (to.meta.requiresAuth && !user.token) {
         next('/login')

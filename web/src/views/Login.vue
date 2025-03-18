@@ -38,6 +38,7 @@
 
 <script>
 import api from '@/utils/api.js'
+import localStore from '@/utils/store.js'
 import {ElMessage} from 'element-plus';
 import router from '@/router'
 
@@ -48,10 +49,10 @@ export default {
         email: 'cchen7166@conestogac.on.ca',
         otp: '',
       },
-      sendOtpBtnDisabled: true,
+      // sendOtpBtnDisabled: true,
       DEFAULT_COUNTDOWN: 60,
       countdown: 0,
-      loginBtnDisabled: true,
+      // loginBtnDisabled: true,
     }
   },
   computed: {
@@ -63,8 +64,8 @@ export default {
     }
   },
   created() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStore.remove('token');
+    localStore.remove('user');
   },
   methods: {
     startCountdown() {
@@ -89,8 +90,8 @@ export default {
         otp: this.loginForm.otp,
       });
       ElMessage.success("LOGIN SUCCESS");
-      localStorage.setItem("token", resp["token"]);
-      localStorage.setItem("user", JSON.stringify(resp));
+      localStore.set("token", resp["token"]);
+      localStore.set("user", JSON.stringify(resp));
       const role_name = resp["role_name"];
       if (role_name === "STUDENT") {
         router.push('/student');
