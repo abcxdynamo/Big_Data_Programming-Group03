@@ -84,7 +84,7 @@ export default {
 
   },
   async created() {
-    this.user_id = this.$route.params.id;
+    this.user_id = this.$route.params.id || this.get_login_user_id();
     await this.get_user_info();
     await this.get_enrollment_info();
     this.render_charts();
@@ -97,6 +97,9 @@ export default {
       const chartDom = document.querySelector('.chart');
       const myChart = echarts.init(chartDom);
       myChart.setOption(this.performanceChartOptions);
+    },
+    get_login_user_id() {
+      return JSON.parse(localStore.get("user"))["user_id"];
     },
     async get_user_info() {
       this.user_info = await api.get(`/api/users/info/${this.user_id}`);

@@ -16,7 +16,8 @@ const router = createRouter({
     routes: [
         {path: '/login', component: Login},
         {path: '/', component: Index, meta: {requiresAuth: true, roles: ['STUDENT', 'PROFESSOR', 'ADMIN']}},
-        {path: '/student', component: Student, meta: {requiresAuth: true, roles: ['STUDENT']}},
+        // {path: '/student', component: Student, meta: {requiresAuth: true, roles: ['STUDENT']}},
+        {path: '/student', component: StudentInfo, meta: {requiresAuth: true, roles: ['STUDENT']}},
         {path: '/student/:id', component: StudentInfo, meta: {requiresAuth: true, roles: ['STUDENT']}},
         {path: '/professor', component: Professor, meta: {requiresAuth: true, roles: ['PROFESSOR']}},
         {path: '/admin', component: Admin, meta: {requiresAuth: true, roles: ['ADMIN']}},

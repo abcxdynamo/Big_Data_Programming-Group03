@@ -95,7 +95,7 @@ export default {
       localStore.set("user", JSON.stringify(resp));
       const role_name = resp["role_name"];
       if (role_name === "STUDENT") {
-        router.push(`/student/${resp["user_id"]}`);
+        router.push(`/student`);
       } else if (role_name === "INSTRUCTOR") {
         router.push('/instructor');
       } else if (role_name === "ADMIN") {
