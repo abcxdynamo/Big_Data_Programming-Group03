@@ -97,3 +97,42 @@ class BaseModel(db.Model):
         except Exception as e:
             db.session.rollback()
             raise e
+
+    def dict(self, exclude=None, include=None, include_relationships=False):
+        """
+        Converts the SQLAlchemy model instance to a dictionary.
+
+        :param exclude: List of field names to exclude from the output.
+        :param include: List of field names to include (only these fields will be returned).
+        :param include_relationships: If True, include related objects (requires relationships to be defined).
+        :return: Dictionary representation of the model.
+        """
+        # Convert all table columns to a dictionary
+        data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+        # Convert datetime fields to ISO format
+        for key, value in data.items():
+            import datetime
+            if isinstance(value, datetime.datetime):
+                data[key] = value.isoformat()
+
+        # Exclude specified fields
+        if exclude:
+            for field in exclude:
+                data.pop(field, None)
+
+        # Include only specified fields
+        if include:
+            data = {k: v for k, v in data.items() if k in include}
+
+        # Include relationship fields if enabled
+        if include_relationships:
+            for rel in self.__mapper__.relationships.keys():
+                related_obj = getattr(self, rel)
+                if related_obj is not None:
+                    if isinstance(related_obj, list):  # One-to-many relationship
+                        data[rel] = [obj.to_dict() for obj in related_obj]
+                    else:  # One-to-one relationship
+                        data[rel] = related_obj.to_dict()
+
+        return data

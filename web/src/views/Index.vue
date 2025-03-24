@@ -3,10 +3,11 @@
 </template>
 <script>
 import router from "@/router/index.js";
+import localStore from "@/utils/store.js";
 
 export default {
   created() {
-    const user = JSON.parse(localStorage.getItem("user") || {})
+    const user = JSON.parse(localStore.get("user") || {})
     console.log(user);
     if (user && user['role_name']) {
       const role_name = user['role_name'];

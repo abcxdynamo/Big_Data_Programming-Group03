@@ -1,8 +1,7 @@
 # server info
-import models
 from base.base_model import db
-from models.user import User
-from models.user_role import UserRole
+from models import User, Term, Program, Course, TermProgramCourse, Enrollment, Grade
+from models import UserRole
 
 SERVER_PORT = 5001
 REGISTER_SERVER_NAME = "performa"
@@ -22,16 +21,74 @@ def init_database(_app):
         db.create_all()
         UserRole.save_all(
             UserRole(id=1, name="STUDENT"),
-            UserRole(id=2, name="PROFESSOR"),
+            UserRole(id=2, name="INSTRUCTOR"),
             UserRole(id=3, name="ADMIN"),
         )
 
         User.save_all(
-            User(email="cchen7166@conestogac.on.ca", first_name="Ce", last_name="Chen", role_id=1),
-            User(email="mila@conestogac.on.ca", first_name="Xiaoman", last_name="Yang", role_id=1),
-            User(email="hubin@conestogac.on.ca", first_name="Bin", last_name="Hu", role_id=1),
-            User(email="anuroopa@conestogac.on.ca", first_name="Anuroopa", last_name="Balachandran", role_id=1),
-            User(email="cchen71666@conestogac.on.ca", first_name="Jomis", last_name="X", role_id=2),
-            User(email="cchen716666@conestogac.on.ca", first_name="Admin", last_name="X", role_id=3),
+            User(id=1, email="admin@conestogac.on.ca", first_name="Admin", last_name="", role_id=3),
+            User(id=2, email="cc@conestogac.on.ca", first_name="Ce", last_name="Chen", role_id=1),
+            User(id=3, email="mila@conestogac.on.ca", first_name="Mila", last_name="Yang", role_id=1),
+            User(id=4, email="hubin@conestogac.on.ca", first_name="Bin", last_name="Hu", role_id=1),
+            User(id=5, email="anuroopa@conestogac.on.ca", first_name="Anuroopa", last_name="Balachandran", role_id=1),
+            User(id=6, email="alex@conestogac.on.ca", first_name="Alex", last_name="", role_id=2),
+            User(id=7, email="eric@conestogac.on.ca", first_name="Eric", last_name="", role_id=2),
+            User(id=8, email="jomis@conestogac.on.ca", first_name="Jomis", last_name="", role_id=2),
+            User(id=9, email="amrita@conestogac.on.ca", first_name="Amrita", last_name="", role_id=2),
+            User(id=10, email="ahmed@conestogac.on.ca", first_name="Ahmed", last_name="", role_id=2),
+        )
+
+        Term.save_all(
+            Term(id=1, year=2025, season="Winter")
+        )
+
+        Program.save_all(
+            Program(id=1, code="1448", name="Big Data Solution Architecture", co_op=True)
+        )
+
+        Course.save_all(
+            Course(id=1, code="PROG8401", name="Relational Database Design"),
+            Course(id=2, code="PROG8411", name="NoSQL Database Implementation"),
+            Course(id=3, code="PROG8421", name="Programming for Big Data"),
+            Course(id=4, code="PROG8441", name="Software Quality"),
+            Course(id=5, code="PROG8461", name="Web Analytics and Business Intelligence Tools"),
+        )
+
+        TermProgramCourse.save_all(
+            TermProgramCourse(id=1, term_id=1, program_id=1, course_id=1, instructor_id=6),
+            TermProgramCourse(id=2, term_id=1, program_id=1, course_id=2, section=1, instructor_id=7),
+            TermProgramCourse(id=3, term_id=1, program_id=1, course_id=3, section=1, instructor_id=8),
+            TermProgramCourse(id=4, term_id=1, program_id=1, course_id=4, section=1, instructor_id=9),
+            TermProgramCourse(id=5, term_id=1, program_id=1, course_id=5, section=1, instructor_id=10),
+        )
+
+        Enrollment.save_all(
+            Enrollment(student_id=2, term_id=1, program_id=1),
+            Enrollment(student_id=3, term_id=1, program_id=1),
+            Enrollment(student_id=4, term_id=1, program_id=1),
+            Enrollment(student_id=5, term_id=1, program_id=1),
+        )
+
+        Grade.save_all(
+            Grade(student_id=2, term_id=1, program_id=1, course_id=1, final_grade=10.0),
+            Grade(student_id=2, term_id=1, program_id=1, course_id=2, final_grade=11.0),
+            Grade(student_id=2, term_id=1, program_id=1, course_id=3, final_grade=12.0),
+            Grade(student_id=2, term_id=1, program_id=1, course_id=4, final_grade=13.0),
+            Grade(student_id=2, term_id=1, program_id=1, course_id=5, final_grade=14.0),
+            Grade(student_id=3, term_id=1, program_id=1, course_id=1, final_grade=30.0),
+            Grade(student_id=3, term_id=1, program_id=1, course_id=2, final_grade=31.0),
+            Grade(student_id=3, term_id=1, program_id=1, course_id=3, final_grade=32.0),
+            Grade(student_id=3, term_id=1, program_id=1, course_id=4, final_grade=33.0),
+            Grade(student_id=3, term_id=1, program_id=1, course_id=5, final_grade=34.0),
+            Grade(student_id=4, term_id=1, program_id=1, course_id=1, final_grade=20.0),
+            Grade(student_id=4, term_id=1, program_id=1, course_id=2, final_grade=21.0),
+            Grade(student_id=4, term_id=1, program_id=1, course_id=3, final_grade=22.0),
+            Grade(student_id=4, term_id=1, program_id=1, course_id=4, final_grade=23.0),
+            Grade(student_id=4, term_id=1, program_id=1, course_id=5, final_grade=24.0),
+            Grade(student_id=5, term_id=1, program_id=1, course_id=1, final_grade=40.0),
+            Grade(student_id=5, term_id=1, program_id=1, course_id=2, final_grade=41.0),
+            Grade(student_id=5, term_id=1, program_id=1, course_id=3, final_grade=42.0),
+            Grade(student_id=5, term_id=1, program_id=1, course_id=4, final_grade=43.0),
+            Grade(student_id=5, term_id=1, program_id=1, course_id=5, final_grade=44.0),
         )
     pass

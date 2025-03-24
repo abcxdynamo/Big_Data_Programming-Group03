@@ -16,8 +16,10 @@ def index():
 def send_otp():
     data = request.parsed_data
     email = data.get('email')
-    UserService.send_otp(email)
-    return OK
+    # UserService.send_otp(email)
+    # return OK
+    # FIXME for test
+    return UserService.send_otp(email)
 
 
 @index_bp.route("/login", methods=["POST"])

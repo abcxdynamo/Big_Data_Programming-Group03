@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {ElMessage} from 'element-plus';
+import localStore from './store';
 
 // Creating an Axios Instance
 const api = axios.create({
@@ -12,7 +13,7 @@ const api = axios.create({
 // request interceptors
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStore.get('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

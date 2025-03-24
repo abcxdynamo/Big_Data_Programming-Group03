@@ -31,11 +31,12 @@ class BaseBlueprint(Blueprint):
         success = self._check_status_code_success(status_code)
         if response.is_json:
             response_data = response.get_json() or {}
-            keys = response_data.keys()
-            if "code" in keys and "success" in keys and "data" in keys:
-                status_code = response_data.get("code")
-                success = response_data.get("success")
-                response_data = response_data.get("data")
+            if isinstance(response_data, dict):
+                keys = response_data.keys()
+                if "code" in keys and "success" in keys and "data" in keys:
+                    status_code = response_data.get("code")
+                    success = response_data.get("success")
+                    response_data = response_data.get("data")
         elif type(response.data) == bytes:
             response_data = response.data.decode('utf-8')
         else:
