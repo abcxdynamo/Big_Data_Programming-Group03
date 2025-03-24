@@ -14,6 +14,7 @@ CORS(app, supports_credentials=True)
 register_routes(app)
 
 if __name__ == '__main__':
+    print("Stage 1")
     if config.FIRST_RUN:
         config.init_database(app)
     app.run(host='0.0.0.0', debug=True, port=config.SERVER_PORT)
