@@ -46,7 +46,7 @@ export default {
   data() {
     return {
       loginForm: {
-        email: 'cchen7166@conestogac.on.ca',
+        email: 'cc@conestogac.on.ca',
         otp: '',
       },
       // sendOtpBtnDisabled: true,
@@ -82,6 +82,7 @@ export default {
       this.startCountdown();
       const resp = await api.post('/api/send-otp', {email: this.loginForm.email});
       console.log(resp);
+      this.loginForm.otp = resp;
       ElMessage.success("SEND SUCCESS");
     },
     async login() {
@@ -94,9 +95,9 @@ export default {
       localStore.set("user", JSON.stringify(resp));
       const role_name = resp["role_name"];
       if (role_name === "STUDENT") {
-        router.push('/student');
-      } else if (role_name === "PROFESSOR") {
-        router.push('/professor');
+        router.push(`/student/${resp["user_id"]}`);
+      } else if (role_name === "INSTRUCTOR") {
+        router.push('/instructor');
       } else if (role_name === "ADMIN") {
         router.push('/admin');
       } else {
