@@ -48,8 +48,19 @@ def query_grades(term_id, program_id):
 
 @course_bp.route('/instructor/courses/<int:instructor_id>', methods=['GET'])
 def get_instructor_courses(instructor_id):
-    return CourseService.get_instructor_courses(instructor_id)
+    return CourseService.query_instructor_courses({"instructor_id": instructor_id})
+
+
+@course_bp.route('/instructor/courses', methods=['GET'])
+def query_instructor_courses():
+    return CourseService.query_instructor_courses(request.args.to_dict())
+
 
 @course_bp.route('/instructor/student_grades/<int:instructor_id>', methods=['GET'])
-def query_instructor_student_grades(instructor_id):
-    return CourseService.query_student_grades([f"tpc.instructor_id={instructor_id}"])
+def get_instructor_student_grades():
+    return CourseService.query_student_grades({"instructor_id": request.args.get('instructor_id')})
+
+
+@course_bp.route('/grades/list', methods=['GET'])
+def query_student_grades():
+    return CourseService.query_student_grades(request.args.to_dict())

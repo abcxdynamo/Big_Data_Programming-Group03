@@ -9,7 +9,7 @@
         <el-descriptions-item label="Email">{{ user_info["email"] }}</el-descriptions-item>
       </el-descriptions>
 
-      <h3>Manage Student Courses</h3>
+      <h3>Instructor Courses</h3>
       <el-table :data="instructor_courses" style="width: 100%" border>
         <el-table-column prop="term" label="Term">
           <template #default="scope">
@@ -28,7 +28,7 @@
         </el-table-column>
       </el-table>
 
-      <h3>Manage Student Grades</h3>
+      <h3>Student Grades</h3>
       <el-table :data="student_grades" style="width: 100%" border>
         <el-table-column prop="student_name" label="Student Name" width="200"></el-table-column>
         <el-table-column prop="student_email" label="Email" width="250"></el-table-column>
@@ -109,10 +109,11 @@ export default {
       this.user_info = await api.get(`/api/users/info/${this.user_id}`);
     },
     async get_instructor_courses() {
-      this.instructor_courses = await api.get(`/api/instructor/courses/${this.user_id}`);
+      this.instructor_courses = await api.get(`/api/instructor/courses?instructor_id=${this.user_id}`);
     },
     async query_instructor_student_grades() {
-      const student_grades = await api.get(`/api/instructor/student_grades/${this.user_id}`);
+      const student_grades = await api.get(`/api/grades/list?instructor_id=${this.user_id}`);
+      // const student_grades = await api.get(`/api/grades/list`);
       const student_ids = student_grades.map(s => s["student_id"]);
       const user_infos = await this.query_user_infos(student_ids);
       _.each(student_grades, s => {
@@ -123,7 +124,7 @@ export default {
       this.student_grades = student_grades;
     },
     async query_user_infos(user_ids) {
-      const users = await api.post(`/api/users/list`, {"ids": user_ids});
+      const users = await api.post(`/api/users/list`, {"ids": _.uniq(user_ids)});
       return _.reduce(users, (result, user) => {
         result[user.id] = user;
         return result;

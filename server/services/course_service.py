@@ -63,11 +63,19 @@ class CourseService:
         return Grade.query.filter_by(**filters).all()
 
     @staticmethod
-    def get_instructor_courses(instructor_id):
-        sql = """
+    def query_instructor_courses(query=None):
+        conditions = []
+        if query is None:
+            query = {}
+        if query.get('instructor_id'):
+            conditions.append("instructor_id=:instructor_id")
+        if not conditions or len(conditions) == 0:
+            conditions = ["1=1"]
+        sql = f"""
             select 
                 tpc.id,
                 tpc.term_id,
+                tpc.instructor_id,
                 t.year term_year,
                 t.season term_season,
                 t.section term_section,
@@ -81,13 +89,34 @@ class CourseService:
             join terms t on tpc.term_id=t.id
             join programs p on tpc.program_id=p.id
             join courses c on tpc.course_id=c.id
-            where tpc.instructor_id=:instructor_id
+            where {" and ".join(conditions)}
         """
-        return db_execute(sql, {"instructor_id": instructor_id})
+        return db_execute(sql, query)
 
 
     @staticmethod
-    def query_student_grades(conditions=None):
+    def query_student_grades(query=None):
+        if query is None:
+            query = {}
+        conditions = []
+        if query.get("instructor_id"):
+            conditions.append("instructor_id=:instructor_id")
+        if query.get("term_id"):
+            conditions.append("term_id=:term_id")
+        if query.get("program_id"):
+            conditions.append("program_id=:program_id")
+        if query.get("course_id"):
+            conditions.append("course_id=:course_id")
+        if query.get("student_id"):
+            conditions.append("student_id=:student_id")
+        if query.get("student_name"):
+            conditions.append("student_name like %:student_name%")
+        if query.get("email"):
+            conditions.append("email like %:email%")
+        if query.get("course_name"):
+            conditions.append("course_name like %:course_name%")
+        if query.get("term_name"):
+            conditions.append("(term_code like %:term_name% or term_code like %:term_code%)")
         if conditions is None or len(conditions) == 0:
             conditions = ["1=1"]
         sql = f"""
@@ -117,7 +146,7 @@ class CourseService:
             order by student_id, term_id, program_id, course_id
 
         """
-        return db_execute(sql)
+        return db_execute(sql, query)
 
     # @staticmethod
     # def get_student_enrollment_info(student_id):
