@@ -55,7 +55,7 @@ export default {
   data() {
     return {
       loginForm: {
-        email: 'cc@conestogac.on.ca',
+        email: 'admin@conestogac.on.ca',
         otp: '',
       },
       // sendOtpBtnDisabled: true,

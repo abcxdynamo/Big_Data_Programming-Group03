@@ -11,7 +11,6 @@ class TermProgramCourse(BaseModel):
     program_id = db.Column(db.Integer, ForeignKey('programs.id'), nullable=False)
     course_id = db.Column(db.Integer, ForeignKey('courses.id'), nullable=False)
     instructor_id = db.Column(db.Integer, ForeignKey('users.id'), nullable=False)
-    section = db.Column(db.SmallInteger, default=1, nullable=False)
 
     # course = relationship("Course", backref="term_program_courses")
 

@@ -1,5 +1,6 @@
 <template>
   <div class="student-container">
+    <el-link style="position:absolute;top:10px;right:20px;" @click="handleLogout">logout</el-link>
     <el-card class="student-card">
       <h2>Student Dashboard</h2>
 
@@ -93,6 +94,9 @@ export default {
 
   },
   methods: {
+    handleLogout() {
+      window.location.href="/login";
+    },
     render_charts() {
       const chartDom = document.querySelector('.chart');
       const myChart = echarts.init(chartDom);
