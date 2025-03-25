@@ -14,8 +14,8 @@ export default {
       console.log(role_name);
       if (role_name === "STUDENT") {
         router.push('/student');
-      } else if (role_name === "PROFESSOR") {
-        router.push('/professor');
+      } else if (role_name === "INSTRUCTOR") {
+        router.push('/instructor');
       } else if (role_name === "ADMIN") {
         router.push('/admin');
       } else {

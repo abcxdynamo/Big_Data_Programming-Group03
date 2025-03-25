@@ -44,3 +44,12 @@ def query_grades(term_id, program_id):
                                                    program_id,
                                                    request.args.get('student_id'),
                                                    request.args.get('course_id')))
+
+
+@course_bp.route('/instructor/courses/<int:instructor_id>', methods=['GET'])
+def get_instructor_courses(instructor_id):
+    return CourseService.get_instructor_courses(instructor_id)
+
+@course_bp.route('/instructor/student_grades/<int:instructor_id>', methods=['GET'])
+def query_instructor_student_grades(instructor_id):
+    return CourseService.query_student_grades([f"tpc.instructor_id={instructor_id}"])

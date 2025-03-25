@@ -5,7 +5,7 @@ import Index from '../views/Index.vue'
 import Login from '../views/Login.vue'
 import Student from '../views/dashboard/Student.vue'
 import StudentInfo from '../views/dashboard/StudentInfo.vue'
-import Professor from '../views/dashboard/Professor.vue'
+import InstructorInfo from '../views/dashboard/InstructorInfo.vue'
 import Admin from '../views/dashboard/Admin.vue'
 import Forbidden from '../views/error/Forbidden.vue'
 import PageNotFound from '../views/error/PageNotFound.vue'
@@ -15,11 +15,13 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         {path: '/login', component: Login},
-        {path: '/', component: Index, meta: {requiresAuth: true, roles: ['STUDENT', 'PROFESSOR', 'ADMIN']}},
+        {path: '/', component: Index, meta: {requiresAuth: true, roles: ['STUDENT', 'INSTRUCTOR', 'ADMIN']}},
         // {path: '/student', component: Student, meta: {requiresAuth: true, roles: ['STUDENT']}},
         {path: '/student', component: StudentInfo, meta: {requiresAuth: true, roles: ['STUDENT']}},
         {path: '/student/:id', component: StudentInfo, meta: {requiresAuth: true, roles: ['STUDENT']}},
-        {path: '/professor', component: Professor, meta: {requiresAuth: true, roles: ['PROFESSOR']}},
+        // {path: '/instructor', component: Instructor, meta: {requiresAuth: true, roles: ['INSTRUCTOR']}},
+        {path: '/instructor', component: InstructorInfo, meta: {requiresAuth: true, roles: ['INSTRUCTOR']}},
+        {path: '/instructor/:id', component: InstructorInfo, meta: {requiresAuth: true, roles: ['INSTRUCTOR']}},
         {path: '/admin', component: Admin, meta: {requiresAuth: true, roles: ['ADMIN']}},
         {path: '/403', component: Forbidden},
         {path: '/:pathMatch(.*)*', component: PageNotFound}

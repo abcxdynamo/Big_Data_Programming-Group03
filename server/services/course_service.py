@@ -1,3 +1,4 @@
+from base.base_model import db_execute
 from models import User, UserRole, Enrollment, Term, Program, TermProgramCourse, Course, Grade
 from models import UserToken
 from utils.common import send_email
@@ -60,6 +61,63 @@ class CourseService:
             filters["course_id"] = course_id
 
         return Grade.query.filter_by(**filters).all()
+
+    @staticmethod
+    def get_instructor_courses(instructor_id):
+        sql = """
+            select 
+                tpc.id,
+                tpc.term_id,
+                t.year term_year,
+                t.season term_season,
+                t.section term_section,
+                tpc.program_id,
+                p.code program_code,
+                p.name program_name,
+                tpc.course_id,
+                c.code course_code,
+                c.name course_name
+            from term_program_courses tpc
+            join terms t on tpc.term_id=t.id
+            join programs p on tpc.program_id=p.id
+            join courses c on tpc.course_id=c.id
+            where tpc.instructor_id=:instructor_id
+        """
+        return db_execute(sql, {"instructor_id": instructor_id})
+
+
+    @staticmethod
+    def query_student_grades(conditions=None):
+        if conditions is None or len(conditions) == 0:
+            conditions = ["1=1"]
+        sql = f"""
+            select 
+                tpc.id,
+                tpc.term_id,
+                t.year term_year,
+                t.season term_season,
+                t.section term_section,
+                tpc.program_id,
+                p.code program_code,
+                p.name program_name,
+                tpc.course_id,
+                c.code course_code,
+                c.name course_name,
+                e.student_id,
+                g.final_grade
+            from term_program_courses tpc
+            join terms t on tpc.term_id=t.id
+            join programs p on tpc.program_id=p.id
+            join courses c on tpc.course_id=c.id
+            join enrollments e on tpc.term_id=e.term_id and tpc.program_id=e.program_id
+            join grades g on e.student_id=g.student_id and tpc.term_id=g.term_id and tpc.program_id=g.program_id and tpc.course_id=g.course_id
+            join users ins on tpc.instructor_id=ins.id
+            join users stu on e.student_id=stu.id
+            where {" and ".join(conditions)}
+            order by student_id, term_id, program_id, course_id
+
+        """
+        return db_execute(sql)
 
     # @staticmethod
     # def get_student_enrollment_info(student_id):

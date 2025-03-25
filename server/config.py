@@ -39,7 +39,7 @@ def init_database(_app):
         )
 
         Term.save_all(
-            Term(id=1, year=2025, season="Winter")
+            Term(id=1, year=2025, season="Winter", section=1, start_date='2025-01-01', end_date='2025-04-30'),
         )
 
         Program.save_all(
@@ -56,10 +56,10 @@ def init_database(_app):
 
         TermProgramCourse.save_all(
             TermProgramCourse(id=1, term_id=1, program_id=1, course_id=1, instructor_id=6),
-            TermProgramCourse(id=2, term_id=1, program_id=1, course_id=2, section=1, instructor_id=7),
-            TermProgramCourse(id=3, term_id=1, program_id=1, course_id=3, section=1, instructor_id=8),
-            TermProgramCourse(id=4, term_id=1, program_id=1, course_id=4, section=1, instructor_id=9),
-            TermProgramCourse(id=5, term_id=1, program_id=1, course_id=5, section=1, instructor_id=10),
+            TermProgramCourse(id=2, term_id=1, program_id=1, course_id=2, instructor_id=7),
+            TermProgramCourse(id=3, term_id=1, program_id=1, course_id=3, instructor_id=8),
+            TermProgramCourse(id=4, term_id=1, program_id=1, course_id=4, instructor_id=9),
+            TermProgramCourse(id=5, term_id=1, program_id=1, course_id=5, instructor_id=10),
         )
 
         Enrollment.save_all(

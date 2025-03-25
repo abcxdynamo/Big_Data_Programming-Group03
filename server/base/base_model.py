@@ -1,12 +1,35 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
 
 from utils.time import utcnow
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()
 
+
+def db_execute(sql, params=None):
+    session = sessionmaker(bind=db.engine)()
+    try:
+        cursor = session.execute(text(sql), params)
+        if sql.strip().lower().startswith("select"):
+            columns = cursor.keys()  # Get column names
+            rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            return rows
+        else:
+            session.commit()
+            return cursor.rowcount
+    except Exception as e:
+        print(f"ExecuteSqleError: {e}")
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+
 class SoftDeleteQuery(db.Query):
     """ Custom query class that excludes is_deleted=True records by default """
+
     def only_deleted(self):
         """ Query only soft-deleted records """
         return self.filter_by(is_deleted=True)
@@ -18,6 +41,7 @@ class SoftDeleteQuery(db.Query):
     def not_deleted(self):
         """ Query only non-deleted records (default behavior) """
         return self.filter_by(is_deleted=False)
+
 
 class BaseModel(db.Model):
     __abstract__ = True  # Indicate that this is an abstract base class
