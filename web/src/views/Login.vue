@@ -1,6 +1,7 @@
 <style scoped>
 .login-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
@@ -12,10 +13,18 @@
   padding: 20px;
   text-align: center;
 }
+
+.login-logo {
+  width: 180px;
+  margin: 15px;
+  align-items: center;
+}
+
 </style>
 
 <template>
   <div class="login-container">
+    <img src="@/assets/applogo.png" alt="App Logo" class="login-logo"/>
     <el-card class="login-card">
       <h2>USER LOGIN</h2>
       <el-form ref="loginFormRef" :model="loginForm" label-width="auto">
@@ -82,7 +91,7 @@ export default {
       this.startCountdown();
       const resp = await api.post('/api/send-otp', {email: this.loginForm.email});
       console.log(resp);
-      this.loginForm.otp = resp;
+      /* this.loginForm.otp = resp; */
       ElMessage.success("SEND SUCCESS");
     },
     async login() {
