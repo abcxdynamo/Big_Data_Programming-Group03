@@ -8,7 +8,12 @@ REGISTER_SERVER_NAME = "performa"
 
 SECRET_KEY = "ABCX_PERFORMA"
 
-DB_URI = 'mysql+pymysql://root:123456@localhost:3306/performa?charset=utf8mb4'
+DB_HOST = '3.16.163.186'
+DB_PORT = 3306
+DB_USER = 'performa'
+DB_PASSWORD = 'QWER1234'
+DB_NAME = 'performa'
+DB_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4'
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 # don't submit next line when set to True
