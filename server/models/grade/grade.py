@@ -7,7 +7,7 @@ class Grade(BaseModel):
     student_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     term_id = db.Column(db.Integer, db.ForeignKey('terms.id'))
     program_id = db.Column(db.Integer, db.ForeignKey('programs.id'))
-    course_id = db.Column(db.Integer, db.ForeignKey('term_program_courses.id'))
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
     final_grade = db.Column(db.Float, nullable=False, default=0.0)
 
     def __repr__(self):
