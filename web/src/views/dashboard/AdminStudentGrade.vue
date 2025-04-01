@@ -7,8 +7,8 @@
       <el-input v-model="query_form.course_name" placeholder="Please Input Course Name" style="width:200px;"></el-input>
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" @click="queryData">查询</el-button>
-      <el-button @click="resetForm">重置</el-button>
+      <el-button type="primary" @click="queryData">Query</el-button>
+      <el-button @click="resetForm">Reset</el-button>
     </el-form-item>
   </el-form>
   <el-table :data="paginated_data" v-loading="loading" style="width: 100%" border>
