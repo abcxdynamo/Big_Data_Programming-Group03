@@ -64,3 +64,11 @@ def get_instructor_student_grades():
 @course_bp.route('/grades/list', methods=['GET'])
 def query_student_grades():
     return CourseService.query_student_grades(request.args.to_dict())
+
+
+@course_bp.route('/grades/<int:grade_id>/feedback', methods=['POST'])
+def save_grade_feedback(grade_id):
+    data = request.parsed_data
+    feedback = data.get('feedback')
+    CourseService.save_grade_feedback(grade_id, feedback)
+    return OK

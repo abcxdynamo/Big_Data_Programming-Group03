@@ -9,6 +9,7 @@ class Grade(BaseModel):
     program_id = db.Column(db.Integer, db.ForeignKey('programs.id'))
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'))
     final_grade = db.Column(db.Float, nullable=False, default=0.0)
+    feedback = db.Column(db.Text)
 
     def __repr__(self):
         return f'<Grade#{self.id} {self.term_id} {self.program_id} {self.course_id}>'

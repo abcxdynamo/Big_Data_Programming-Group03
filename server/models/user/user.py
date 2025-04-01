@@ -8,6 +8,7 @@ class User(BaseModel):
     first_name = db.Column(db.String(128))
     last_name = db.Column(db.String(128))
     role_id = db.Column(db.Integer, db.ForeignKey('user_roles.id'))
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     @property
     def fullname(self):

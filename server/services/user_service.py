@@ -39,7 +39,7 @@ class UserService:
     @staticmethod
     def send_otp(email):
         user = UserService.get_user_by_email(email)
-
+        assert user.is_active, f"inactive user {email}"
         # First check if there is an available OTP and make sure there is only one available OTP
         user_token = UserToken.query.filter(
             UserToken.user_id == user.id,
@@ -61,6 +61,7 @@ class UserService:
     @staticmethod
     def validate_otp(email, otp):
         user = UserService.get_user_by_email(email)
+        assert user.is_active, f"inactive user {email}"
         user_token = (UserToken.query
                       .filter_by(user_id=user.id, otp=otp)
                       .filter(UserToken.expires >= utcnow(),
@@ -84,6 +85,12 @@ class UserService:
             "role_name": user_role.name,
             "token": token
         }
+
+    @staticmethod
+    def toggle_active(user_id):
+        user = UserService.get_user_by_id(user_id)
+        user.is_active = not user.is_active
+        user.save()
 
     @staticmethod
     def test():
