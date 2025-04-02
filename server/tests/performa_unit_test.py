@@ -1,144 +1,169 @@
-import sys 
-import os
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+from flask import json
+import os
+import sys
 from datetime import datetime, timedelta, timezone
 
-# Ensure the `server` folder is in sys.path
+# Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import the Flask app and services
-from performa import app
-from services.user_service import UserService
+from performa import app, db
 from models.user.user import User
-from models.user.user_token import UserToken
 from models.user.user_role import UserRole
-from utils.auth import generate_jwt_token
+from models.user.user_token import UserToken
 
-class TestUserService(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """Ensure the Flask app context is active for all test cases"""
-        cls.app_context = app.app_context()
-        cls.app_context.push()
-
-    @classmethod
-    def tearDownClass(cls):
-        """Remove the app context after all tests are done"""
-        cls.app_context.pop()
-
+class TestLogin(unittest.TestCase):
     def setUp(self):
-        """Set up test client and reset mocks"""
+        # Configure test app with in-memory SQLite
+        app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config['WTF_CSRF_ENABLED'] = False
+        
         self.client = app.test_client()
         
-        # Mock send_email function
-        self.patcher_send_email = patch('services.user_service.send_email', return_value=None)
-        self.mock_send_email = self.patcher_send_email.start()
-        
-        # Common mock user data
-        self.mock_user = MagicMock()
-        self.mock_user.is_active = True
-        self.mock_user.email = 'test@example.com'
-        self.mock_user.id = 1
-        self.mock_user.role_id = 1
-
-        # Mock utcnow for token expiration (using timezone-aware datetime)
-        self.patcher_utcnow = patch('services.user_service.utcnow')
-        self.mock_utcnow = self.patcher_utcnow.start()
-        self.mock_utcnow.return_value = datetime.now(timezone.utc)
+        # Create test database
+        with app.app_context():
+            db.create_all()
+            
+            # Create all required roles first
+            roles = [
+                UserRole(id=1, name="STUDENT"),
+                UserRole(id=2, name="INSTRUCTOR"),
+                UserRole(id=3, name="ADMIN")
+            ]
+            db.session.add_all(roles)
+            db.session.commit()
+            
+            # Create test user
+            user = User(
+                id=9999,
+                email="testuser@conestogac.on.ca",
+                first_name="Test",
+                last_name="User",
+                role_id=1,  # Matches STUDENT role
+                is_active=True,
+                create_time=datetime.now(timezone.utc),
+                update_time=datetime.now(timezone.utc),
+                is_deleted=False
+            )
+            db.session.add(user)
+            db.session.commit()
 
     def tearDown(self):
-        """Stop all active patches"""
-        patch.stopall()
+        with app.app_context():
+            db.session.remove()
+            db.drop_all()
 
-    @patch('services.user_service.UserService.get_user_by_email')
-    @patch('services.user_service.UserToken')
-    def test_send_otp(self, mock_user_token, mock_get_user_by_email):
-        print("Starting test_send_otp...")
+    @patch('models.user.user_token.generate_otp', return_value="123456")
+    def test_send_otp_success(self, mock_otp):
+        """Test successful OTP sending"""
+        response = self.client.post(
+            '/api/send-otp',
+            json={'email': 'testuser@conestogac.on.ca'}
+        )
+        print("Response data:", response.data)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['code'], 200)
+        self.assertTrue(data['success'])
+        self.assertEqual(data['data'], "123456")  # Should match mocked OTP
 
-        # Mock user
-        mock_get_user_by_email.return_value = self.mock_user
+    def test_send_otp_invalid_email(self):
+        """Test OTP sending with invalid email"""
+        response = self.client.post(
+            '/api/send-otp',
+            json={'email': 'nonexistent@conestogac.on.ca'}
+        )
+        print("Response data:", response.data)
+        self.assertEqual(response.status_code, 500)  # Your API returns 500 for this case
+        data = json.loads(response.data)
+        self.assertEqual(data['code'], 500)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['data']['err_msg'], "email nonexistent@conestogac.on.ca not found")
 
-        # Mock UserToken instance with proper expiration
-        mock_token_instance = MagicMock()
-        mock_token_instance.otp = '444601'
-        mock_token_instance.expires = datetime.now(timezone.utc) + timedelta(minutes=15)
-        mock_token_instance.save = MagicMock()
-        mock_user_token.return_value = mock_token_instance
-
-        # Mock query to return None (no existing token)
-        with patch('services.user_service.UserToken.query') as mock_query:
-            mock_filter = MagicMock()
-            mock_filter.first.return_value = None
-            mock_query.filter.return_value = mock_filter
-
-            # Call the method
-            otp = UserService.send_otp('test@example.com')
-
-        # Assertions
-        self.mock_send_email.assert_called_once()
-        mock_token_instance.save.assert_called_once()
-        self.assertEqual(otp, '444601')
-        print("Completed test_send_otp...")
-
-    @patch('services.user_service.UserService.get_user_by_email')
-    @patch('services.user_service.generate_jwt_token')
-    @patch('services.user_service.UserRole')
-    def test_validate_otp(self, mock_user_role, mock_generate_jwt_token, mock_get_user_by_email):
-        print("Starting test_validate_otp...")
-
-        # Setup mocks
-        mock_get_user_by_email.return_value = self.mock_user
-        mock_user_role.get_name_by_id.return_value = 'admin'
-        mock_generate_jwt_token.return_value = 'mock_token'
-
-        # Create a mock user token with proper expiration
-        mock_user_token = MagicMock()
-        mock_user_token.otp = '123456'
-        mock_user_token.token = None
-        mock_user_token.expires = datetime.now(timezone.utc) + timedelta(minutes=15)
-        mock_user_token.save = MagicMock()
-
-        # Mock the query to return our token
-        with patch('services.user_service.UserToken.query') as mock_query:
-            mock_filter_by = MagicMock()
-            mock_filter_by.first.return_value = mock_user_token
-            mock_query.filter_by.return_value = mock_filter_by
-
-            # Test valid OTP
-            result = UserService.validate_otp('test@example.com', '123456')
-
-        # Assertions
-        mock_generate_jwt_token.assert_called_once_with({
-            'user_id': self.mock_user.id,
-            'email': self.mock_user.email,
-            'role_id': self.mock_user.role_id,
-            'role_name': 'admin'
-        })
-        mock_user_token.save.assert_called_once()
-        self.assertEqual(result['token'], 'mock_token')
-        print("Completed test_validate_otp...")
-
-    @patch('services.user_service.UserService.get_user_by_email')
-    def test_validate_otp_invalid(self, mock_get_user_by_email):
-        print("Starting test_validate_otp_invalid...")
+    def test_send_otp_inactive_user(self):
+        """Test OTP sending for inactive user"""
+        with app.app_context():
+            user = db.session.get(User, 9999)
+            user.is_active = False
+            db.session.commit()
         
-        # Setup mocks
-        mock_get_user_by_email.return_value = self.mock_user
-        
-        # Mock query to return None (no token found)
-        with patch('services.user_service.UserToken.query') as mock_query:
-            mock_filter_by = MagicMock()
-            mock_filter_by.first.return_value = None
-            mock_query.filter_by.return_value = mock_filter_by
+        response = self.client.post(
+            '/api/send-otp',
+            json={'email': 'testuser@conestogac.on.ca'}
+        )
+        print("Response data:", response.data)
+        self.assertEqual(response.status_code, 500)  # Your API returns 500 for this case
+        data = json.loads(response.data)
+        self.assertEqual(data['code'], 500)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['data']['err_msg'], "inactive user testuser@conestogac.on.ca")
 
-            # Test with invalid OTP (should raise AssertionError)
-            with self.assertRaises(AssertionError) as context:
-                UserService.validate_otp('test@example.com', 'wrong_otp')
-            
-            self.assertEqual(str(context.exception), "Invalid credentials")
+    @patch('models.user.user_token.generate_otp', return_value="123456")
+    def test_verify_otp_success(self, mock_otp):
+        """Test successful OTP verification"""
+        # First send OTP
+        self.client.post('/api/send-otp',
+                       json={'email': 'testuser@conestogac.on.ca'})
         
-        print("Completed test_validate_otp_invalid...")
+        # Then verify
+        response = self.client.post(
+            '/api/login',
+            json={
+                'email': 'testuser@conestogac.on.ca',
+                'otp': '123456'
+            }
+        )
+        print("Response data:", response.data)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data['code'], 200)
+        self.assertTrue(data['success'])
+        self.assertIn('token', data['data'])
+
+    @patch('models.user.user_token.utcnow')
+    def test_verify_otp_expired(self, mock_utcnow):
+        """Test expired OTP verification"""
+        # Mock future time to make OTP expired
+        mock_utcnow.return_value = datetime.now(timezone.utc) + timedelta(minutes=10)
+        
+        self.client.post('/api/send-otp',
+                       json={'email': 'testuser@conestogac.on.ca'})
+        
+        response = self.client.post(
+            '/api/login',
+            json={
+                'email': 'testuser@conestogac.on.ca',
+                'otp': '123456'
+            }
+        )
+        print("Response data:", response.data)
+        self.assertEqual(response.status_code, 500)  # Your API returns 500 for this case
+        data = json.loads(response.data)
+        self.assertEqual(data['code'], 500)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['data']['err_msg'], "Invalid credentials")
+
+    def test_verify_otp_invalid(self):
+        """Test invalid OTP verification"""
+        self.client.post('/api/send-otp',
+                       json={'email': 'testuser@conestogac.on.ca'})
+        
+        response = self.client.post(
+            '/api/login',
+            json={
+                'email': 'testuser@conestogac.on.ca',
+                'otp': 'wrong_otp'
+            }
+        )
+        print("Response data:", response.data)
+        self.assertEqual(response.status_code, 500)  # Your API returns 500 for this case
+        data = json.loads(response.data)
+        self.assertEqual(data['code'], 500)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['data']['err_msg'], "Invalid credentials")
 
 if __name__ == '__main__':
     unittest.main()
