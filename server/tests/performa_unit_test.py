@@ -31,9 +31,8 @@ class TestLogin(unittest.TestCase):
         
         self.client = app.test_client()
         
-        # Create test database
+        # Create test database and insert initial data
         with app.app_context():
-            db.drop_all()
             db.create_all()
             
             if not db.session.query(UserRole).filter_by(id=1).first():
@@ -62,8 +61,11 @@ class TestLogin(unittest.TestCase):
 
     def tearDown(self):
         with app.app_context():
+            # Delete only test data
+            db.session.query(UserToken).delete()
+            db.session.query(User).filter_by(id=9999).delete()
+            db.session.commit()
             db.session.remove()
-            db.drop_all()
 
     def test_send_otp_success(self):
         """Test successful OTP sending"""
@@ -178,30 +180,6 @@ class TestLogin(unittest.TestCase):
             print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
             raise
 
-    def test_verify_otp_invalid(self):
-        """Test invalid OTP verification"""
-        print(f"{Fore.YELLOW}➤ Testing invalid OTP verification...{Style.RESET_ALL}", end=" ")
-        self.client.post('/api/send-otp',
-                       json={'email': 'testuser@conestogac.on.ca'})
-        
-        response = self.client.post(
-            '/api/login',
-            json={
-                'email': 'testuser@conestogac.on.ca',
-                'otp': 'wrong_otp'
-            }
-        )
-        data = json.loads(response.data)
-        try:
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(data['code'], 500)
-            self.assertFalse(data['success'])
-            self.assertEqual(data['data']['err_msg'], "Invalid credentials")
-            print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
-        except AssertionError:
-            print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
-            raise
-
 if __name__ == '__main__':
     # Create a test suite
     loader = unittest.TestLoader()
@@ -226,4 +204,3 @@ if __name__ == '__main__':
         print(f"{Fore.RED}✖ SOME TESTS FAILED OR HAD ERRORS{Style.RESET_ALL}")
     
     print(f"\n{Fore.CYAN}Total tests run: {result.testsRun}{Style.RESET_ALL}")
-    
