@@ -3,6 +3,7 @@ from flask import request
 from base.base_blueprint import BaseBlueprint, OK
 from services import UserService
 from utils.model import to_dict_list
+from utils.auth import auth_required
 
 user_bp = BaseBlueprint('users', __name__)
 
@@ -21,4 +22,11 @@ def query_user_list():
 # @auth_required()
 def get_student(student_id):
     print(f"get_student: {student_id}")
+    return OK
+
+
+@user_bp.route('toggle_active/<int:user_id>', methods=['POST'])
+@auth_required("ADMIN")
+def toggle_active(user_id):
+    UserService.toggle_active(user_id)
     return OK

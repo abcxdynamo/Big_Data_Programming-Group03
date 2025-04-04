@@ -93,7 +93,6 @@ class CourseService:
         """
         return db_execute(sql, query)
 
-
     @staticmethod
     def query_student_grades(query=None):
         if query is None:
@@ -133,7 +132,9 @@ class CourseService:
                 c.code course_code,
                 c.name course_name,
                 e.student_id,
-                g.final_grade
+                g.id grade_id,
+                g.final_grade,
+                g.feedback grade_feedback
             from term_program_courses tpc
             join terms t on tpc.term_id=t.id
             join programs p on tpc.program_id=p.id
@@ -147,6 +148,12 @@ class CourseService:
 
         """
         return db_execute(sql, query)
+
+    @staticmethod
+    def save_grade_feedback(grade_id, feedback):
+        grade = Grade.query.filter_by(id=grade_id).first()
+        grade.feedback = feedback
+        grade.save()
 
     # @staticmethod
     # def get_student_enrollment_info(student_id):

@@ -91,7 +91,7 @@ export default {
       this.startCountdown();
       const resp = await api.post('/api/send-otp', {email: this.loginForm.email});
       console.log(resp);
-      /* this.loginForm.otp = resp; */
+      this.loginForm.otp = resp;
       ElMessage.success("SEND SUCCESS");
     },
     async login() {
