@@ -87,7 +87,7 @@ export default {
     async get_grades(term_id, program_id, student_id) {
       const grades = await api.get(`/api/grades/${term_id}/${program_id}?student_id=${student_id}`);
       return _.reduce(grades, (result, g) => {
-        result[g.course_id] = g["final_grade"];
+        result[g.tp_course_id] = g["final_grade"];
         return result;
       }, {})
     },
