@@ -1,6 +1,9 @@
 <template>
   <div class="student-container">
-    <el-link style="position:absolute;top:10px;right:20px;" @click="handleLogout">logout</el-link>
+    <img src="@/assets/applogo.png" alt="App Icon" class="app-icon" />
+    <el-link style="position:absolute;top:10px;right:20px;" @click="handleLogout">
+      <el-icon><SwitchButton/></el-icon>logout
+    </el-link>
     <el-card class="student-card">
       <h2>Student Dashboard</h2>
       <el-tabs v-model="activeTabName" class="admin-tabs">
@@ -30,6 +33,7 @@ import * as echarts from 'echarts';
 import localStore from "@/utils/store.js";
 import api from "@/utils/api.js";
 import _ from 'lodash';
+import {SwitchButton} from '@element-plus/icons-vue';
 import StudentGrades from './StudentGrades.vue';
 import StudentAttendance from './StudentAttendance.vue';
 import StudentDashboard from './StudentDashboard.vue';
@@ -37,7 +41,7 @@ import StudentCoopPredictor from './StudentCoopPredictor.vue';
 import StudentCareerSuggester from './StudentCareerSuggester.vue';
 
 export default {
-  components: {StudentDashboard, StudentAttendance, StudentGrades, StudentCoopPredictor, StudentCareerSuggester},
+  components: {StudentDashboard, StudentAttendance, StudentGrades, StudentCoopPredictor, StudentCareerSuggester, SwitchButton},
   data() {
     return {
       activeTabName: "Dashboard",
@@ -64,9 +68,20 @@ export default {
   align-items: center;
   padding: 20px;
 }
-
 .student-card {
-  width: 80%;
+  width: 85%;
   padding: 20px;
+}
+.app-icon {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  z-index: 10;
+}
+.el-link .el-icon {
+  margin-right: 4px;
+  vertical-align: middle;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
-        <h3>Student Dashboard</h3>
-        <el-descriptions title="Student Information" :column="2" border>
+        <h3>Student Information</h3>
+        <el-descriptions border>
             <el-descriptions-item label="Name">{{ user_info.first_name }} {{ user_info.last_name }}</el-descriptions-item>
             <el-descriptions-item label="Email">{{ user_info.email }}</el-descriptions-item>
             <el-descriptions-item label="Term">{{ term.year }} {{ term.season }}</el-descriptions-item>
