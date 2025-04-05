@@ -9,6 +9,6 @@ def scheduled_test():
     print(f"Task execution time: {utcnow()}")
 
 
-@interval_task(10)  # Execute a task every 60 seconds
+@interval_task(60)  # Execute a task every 60 seconds
 def scheduled_predict_and_update_gpa():
     predict_and_update_gpa()

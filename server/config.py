@@ -6,10 +6,10 @@ REGISTER_SERVER_NAME = "performa"
 
 SECRET_KEY = "ABCX_PERFORMA"
 
-DB_HOST = 'localhost'
+DB_HOST = '34.130.133.219'
 DB_PORT = 3306
-DB_USER = 'root'
-DB_PASSWORD = '123456'
+DB_USER = 'performa'
+DB_PASSWORD = 'QWER1234'
 DB_NAME = 'performa'
 DB_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4'
 
