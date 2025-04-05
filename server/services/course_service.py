@@ -51,16 +51,28 @@ class CourseService:
 
     @staticmethod
     def query_grades(term_id, program_id, student_id=None, course_id=None):
+        conditions = [
+            "tpc.term_id=:term_id",
+            "tpc.program_id=:program_id",
+        ]
         filters = {
             "term_id": term_id,
             "program_id": program_id,
         }
         if student_id is not None:
             filters["student_id"] = student_id
+            conditions.append("g.student_id=:student_id")
         if course_id is not None:
             filters["course_id"] = course_id
-
-        return Grade.query.filter_by(**filters).all()
+            conditions.append("tpc.course_id=:course_id")
+        sql = f"""
+            select 
+                g.*
+            from grades g
+            join term_program_courses tpc on g.tp_course_id = tpc.id
+            where {" and ".join(conditions)}
+        """
+        return db_execute(sql, filters)
 
     @staticmethod
     def query_instructor_courses(query=None):
@@ -140,7 +152,7 @@ class CourseService:
             join programs p on tpc.program_id=p.id
             join courses c on tpc.course_id=c.id
             join enrollments e on tpc.term_id=e.term_id and tpc.program_id=e.program_id
-            join grades g on e.student_id=g.student_id and tpc.term_id=g.term_id and tpc.program_id=g.program_id and tpc.course_id=g.course_id
+            join grades g on e.student_id=g.student_id and tpc.id=g.tp_course_id
             join users ins on tpc.instructor_id=ins.id
             join users stu on e.student_id=stu.id
             where {" and ".join(conditions)}

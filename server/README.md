@@ -71,7 +71,7 @@ when the server started, you can change FIRST_RUN = False back.
 curl --location 'http://127.0.0.1:5001/api/send-otp' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "email": "cchen7166@conestogac.on.ca"
+    "email": "cc@conestogac.on.ca"
 }'
 ## response send-otp
 {
@@ -88,8 +88,8 @@ cchen7166@conestogac.on.ca SEND_OTP_SUBJECT OTP: 903916
 curl --location 'http://127.0.0.1:5001/api/login' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "email": "cchen7166@conestogac.on.ca",
-    "otp": 903916
+    "email": "cc@conestogac.on.ca",
+    "otp": 918812
 }'
 ## response login
 {

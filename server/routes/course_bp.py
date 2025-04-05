@@ -40,10 +40,10 @@ def get_term_program_course_list(term_id, program_id):
 
 @course_bp.route('/grades/<int:term_id>/<int:program_id>', methods=['GET'])
 def query_grades(term_id, program_id):
-    return to_dict_list(CourseService.query_grades(term_id,
-                                                   program_id,
-                                                   request.args.get('student_id'),
-                                                   request.args.get('course_id')))
+    return CourseService.query_grades(term_id,
+                                      program_id,
+                                      request.args.get('student_id'),
+                                      request.args.get('course_id'))
 
 
 @course_bp.route('/instructor/courses/<int:instructor_id>', methods=['GET'])
