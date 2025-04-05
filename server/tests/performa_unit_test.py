@@ -42,7 +42,7 @@ class TestLogin(unittest.TestCase):
                     UserRole(id=3, name="ADMIN")
                 ]
                 db.session.bulk_save_objects(roles)
-                
+            
             if not db.session.query(User).filter_by(id=9999).first():
                 user = User(
                     id=9999,
@@ -56,15 +56,20 @@ class TestLogin(unittest.TestCase):
                     is_deleted=False
                 )
                 db.session.add(user)
-            
+
             db.session.commit()
 
     def tearDown(self):
         with app.app_context():
-            # Delete only test data
-            db.session.query(UserToken).delete()
-            db.session.query(User).filter_by(id=9999).delete()
-            db.session.commit()
+            # Delete only tokens related to the test user to avoid FK issues
+            db.session.query(UserToken).filter_by(user_id=9999).delete()
+
+            # Reset the user to active in case a test deactivated it
+            user = db.session.query(User).filter_by(id=9999).first()
+            if user:
+                user.is_active = True
+                db.session.commit()
+
             db.session.remove()
 
     def test_send_otp_success(self):
@@ -157,7 +162,7 @@ class TestLogin(unittest.TestCase):
         """Test expired OTP verification"""
         print(f"{Fore.YELLOW}➤ Testing expired OTP verification...{Style.RESET_ALL}", end=" ")
         self.client.post('/api/send-otp',
-                       json={'email': 'testuser@conestogac.on.ca'})
+                         json={'email': 'testuser@conestogac.on.ca'})
         
         with patch('models.user.user_token.utcnow') as mock_utcnow:
             mock_utcnow.return_value = datetime.now(timezone.utc) + timedelta(minutes=10)
