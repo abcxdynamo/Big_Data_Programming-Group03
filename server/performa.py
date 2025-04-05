@@ -18,7 +18,8 @@ register_routes(app)
 
 if __name__ == '__main__':
     if config.FIRST_RUN:
-        config.init_database(app)
+        # config.init_database(app)
+        pass
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or os.environ.get("FLASK_ENV") != "development":
         start_scheduler()
     app.run(host='0.0.0.0', debug=False, port=config.SERVER_PORT)
