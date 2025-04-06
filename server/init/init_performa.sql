@@ -163,6 +163,7 @@ CREATE TABLE `performance_predictions` (
   `predicted_gpa` decimal(3,2) NOT NULL,
   `predicted_average` decimal(5,2) NOT NULL,
   `prediction_date` datetime DEFAULT NULL,
+  `predicted_career` varchar(300) NOT NULL,
   `create_time` datetime DEFAULT NULL,
   `update_time` datetime DEFAULT NULL,
   `is_deleted` tinyint(1) NOT NULL,
