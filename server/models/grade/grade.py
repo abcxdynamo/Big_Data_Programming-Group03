@@ -11,4 +11,4 @@ class Grade(BaseModel):
     feedback = db.Column(db.Text)
 
     def __repr__(self):
-        return f'<Grade#{self.id} {self.term_id} {self.program_id} {self.course_id}>'
+        return f'<Grade#{self.id}>'

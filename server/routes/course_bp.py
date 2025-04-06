@@ -33,14 +33,21 @@ def get_program_info(program_id):
     return CourseService.get_program(program_id).dict()
 
 
-@course_bp.route('/term_program_courses/<int:term_id>/<int:program_id>', methods=['GET'])
-def get_term_program_course_list(term_id, program_id):
-    return to_dict_list(CourseService.get_term_program_course_list(term_id, program_id))
+@course_bp.route('/term_program_courses/<int:term_id>/<int:program_id>/<int:student_id>', methods=['GET'])
+def get_term_program_course_list(term_id, program_id, student_id):
+    return to_dict_list(CourseService.get_term_program_course_list(term_id, program_id, student_id))
 
 
 @course_bp.route('/grades/<int:term_id>/<int:program_id>', methods=['GET'])
 def query_grades(term_id, program_id):
     return CourseService.query_grades(term_id,
+                                      program_id,
+                                      request.args.get('student_id'),
+                                      request.args.get('course_id'))
+    
+@course_bp.route('/attendance/<int:term_id>/<int:program_id>', methods=['GET'])
+def query_attendance(term_id, program_id):
+    return CourseService.query_attendance(term_id,
                                       program_id,
                                       request.args.get('student_id'),
                                       request.args.get('course_id'))

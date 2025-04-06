@@ -2,7 +2,7 @@
   <div class="student-container">
     <img src="@/assets/applogo.png" alt="App Icon" class="app-icon" />
     <el-link style="position:absolute;top:10px;right:20px;" @click="handleLogout">
-      <el-icon><SwitchButton/></el-icon>logout
+      <el-icon><SwitchButton/></el-icon>Logout
     </el-link>
     <el-card class="student-card">
       <h2>Student Dashboard</h2>
