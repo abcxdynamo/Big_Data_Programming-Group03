@@ -25,6 +25,7 @@ export default defineComponent({
       polling: false,
       user_id: null,
       news_count: 0,
+      long_polling_controller: null,
     }
   },
   async created() {
@@ -33,9 +34,13 @@ export default defineComponent({
   },
   mounted() {
     this.polling = true;
+    this.long_polling_controller = new AbortController();
   },
   unmounted() {
     this.polling = false;
+    if (this.long_polling_controller) {
+      this.long_polling_controller.abort();
+    }
   },
   methods: {
     get_login_user_id() {
@@ -51,6 +56,7 @@ export default defineComponent({
     async check_news() {
       const res = await api.get(`/api/notifications/check_news/${this.user_id}`, {
         timeout: 1000 * 35, // server timeout 30s
+        signal: this.long_polling_controller.signal,
       });
       this.news_count = res["news_count"];
       if (this.news_count === 0 && this.polling) {

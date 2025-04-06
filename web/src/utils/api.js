@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {ElMessage} from 'element-plus';
 import localStore from './store';
+import _ from 'lodash';
 
 // Creating an Axios Instance
 const api = axios.create({
@@ -37,9 +38,12 @@ api.interceptors.response.use(
         }
     },
     (error) => {
-        let message = 'Request failed, please try again later';
-        ElMessage.error(message);
-        return Promise.reject(error);
+        if (!_.includes(["ERR_CANCELED"], error.code)) {
+            console.log(error);
+            let message = 'Request failed, please try again later';
+            ElMessage.error(message);
+            return Promise.reject(error);
+        }
     }
 );
 
