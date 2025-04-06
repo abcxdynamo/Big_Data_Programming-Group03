@@ -30,7 +30,9 @@ class BaseBlueprint(Blueprint):
         status_code = response.status_code
         success = self._check_status_code_success(status_code)
         if response.is_json:
-            response_data = response.get_json() or {}
+            response_data = response.get_json()
+            if response_data is None:
+                response_data = {}
             if isinstance(response_data, dict):
                 keys = response_data.keys()
                 if "code" in keys and "success" in keys and "data" in keys:

@@ -1,7 +1,11 @@
 import datetime
+
+from flask import request
+
 from base.base_model import db_execute
 from models import User, UserRole, Enrollment, Term, Program, TermProgramCourse, Course, Grade, Attendance
 from models import UserToken
+from services.notification_service import NotificationService
 from utils.common import send_email
 from utils.auth import generate_jwt_token, decode_jwt_token
 from datetime import datetime, timezone
@@ -74,7 +78,7 @@ class CourseService:
             where {" and ".join(conditions)}
         """
         return db_execute(sql, filters)
-    
+
     @staticmethod
     def query_attendance(term_id, program_id, student_id=None, course_id=None):
         conditions = [
@@ -202,17 +206,39 @@ class CourseService:
     @staticmethod
     def update_grade(grade_id, final_grade):
         grade = Grade.query.filter_by(id=grade_id).first()
-        if grade:
+        if grade and grade.final_grade != final_grade:
+            orig_final_grade = grade.final_grade
+
             grade.final_grade = final_grade
             grade.update_time = datetime.now(timezone.utc)
             grade.save()
+
+            create_user_id = request and request.auth_user and request.auth_user["user_id"] or 1
+            notification = {
+                "user_id": grade.student_id,
+                "title": "Grade Updated",
+                "content": f"grade updated from {orig_final_grade} to {grade.final_grade}",
+                "create_user_id": create_user_id
+            }
+            NotificationService.new_notification(notification)
 
 
     @staticmethod
     def update_attendance(attendance_id, attendance):
         record = Attendance.query.filter_by(id=attendance_id).first()
-        if record:
+        if record and record.attendance_in_percent != attendance:
+            origin_attendance = record.attendance_in_percent
+
             record.attendance_in_percent = attendance
             record.update_time = datetime.now(timezone.utc)
             record.save()
-            
+
+            create_user_id = request and request.auth_user and request.auth_user["user_id"] or 1
+            notification = {
+                "user_id": record.student_id,
+                "title": "Attendance Updated",
+                "content": f"attendance updated from {origin_attendance} to {record.attendance_in_percent}",
+                "create_user_id": create_user_id
+            }
+            NotificationService.new_notification(notification)
+

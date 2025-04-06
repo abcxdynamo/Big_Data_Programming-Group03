@@ -128,7 +128,7 @@ def predict_and_update_gpa():
                         'predicted_gpa': float(term_gpa),
                         'predicted_average': float(weighted_average)
                     })
-                    print(weighted_average)
+                    # print(weighted_average)
 
             # Update database
             if predictions:
