@@ -5,9 +5,7 @@ from utils.common import send_email
 from utils.auth import generate_jwt_token, decode_jwt_token
 from utils.time import utcnow
 
-
 class CourseService:
-
     @staticmethod
     def get_student_enrollment(student_id):
         return (Enrollment.query
@@ -23,11 +21,13 @@ class CourseService:
         return Program.query.filter_by(id=program_id).first()
 
     @staticmethod
-    def get_term_program_course_list(term_id, program_id):
-        return (TermProgramCourse.query
-                .filter_by(term_id=term_id, program_id=program_id)
-                .all())
-
+    def get_term_program_course_list(term_id, program_id, student_id):
+        return (
+        TermProgramCourse.query
+        .join(Grade, (Grade.tp_course_id == TermProgramCourse.id) & (Grade.student_id == student_id))
+        .filter(TermProgramCourse.term_id == term_id, TermProgramCourse.program_id == program_id).all()
+    )
+           
     @staticmethod
     def get_course(course_id):
         return Course.query.filter_by(id=course_id).first()
@@ -73,6 +73,31 @@ class CourseService:
             where {" and ".join(conditions)}
         """
         return db_execute(sql, filters)
+    
+    @staticmethod
+    def query_attendance(term_id, program_id, student_id=None, course_id=None):
+        conditions = [
+            "tpc.term_id=:term_id",
+            "tpc.program_id=:program_id",
+        ]
+        filters = {
+            "term_id": term_id,
+            "program_id": program_id,
+        }
+        if student_id is not None:
+            filters["student_id"] = student_id
+            conditions.append("a.student_id=:student_id")
+        if course_id is not None:
+            filters["course_id"] = course_id
+            conditions.append("tpc.course_id=:course_id")
+        sql = f"""
+            select 
+                a.*
+            from attendance a
+            join term_program_courses tpc on a.tp_course_id = tpc.id
+            where {" and ".join(conditions)}
+        """
+        return db_execute(sql, filters)
 
     @staticmethod
     def query_instructor_courses(query=None):
@@ -83,6 +108,7 @@ class CourseService:
             conditions.append("instructor_id=:instructor_id")
         if not conditions or len(conditions) == 0:
             conditions = ["1=1"]
+        conditions.append("CURRENT_TIMESTAMP BETWEEN t.start_date AND t.end_date")
         sql = f"""
             select 
                 tpc.id,
@@ -130,6 +156,7 @@ class CourseService:
             conditions.append("(term_code like %:term_name% or term_code like %:term_code%)")
         if conditions is None or len(conditions) == 0:
             conditions = ["1=1"]
+        conditions.append("CURRENT_TIMESTAMP BETWEEN t.start_date AND t.end_date")
         sql = f"""
             select 
                 tpc.id,
