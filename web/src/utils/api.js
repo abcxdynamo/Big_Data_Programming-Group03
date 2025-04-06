@@ -42,8 +42,8 @@ api.interceptors.response.use(
             console.log(error);
             let message = 'Request failed, please try again later';
             ElMessage.error(message);
-            return Promise.reject(error);
         }
+        return Promise.reject(error);
     }
 );
 
