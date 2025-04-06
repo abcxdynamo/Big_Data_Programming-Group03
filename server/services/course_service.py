@@ -1,9 +1,10 @@
+import datetime
 from base.base_model import db_execute
-from models import User, UserRole, Enrollment, Term, Program, TermProgramCourse, Course, Grade
+from models import User, UserRole, Enrollment, Term, Program, TermProgramCourse, Course, Grade, Attendance
 from models import UserToken
 from utils.common import send_email
 from utils.auth import generate_jwt_token, decode_jwt_token
-from utils.time import utcnow
+from datetime import datetime, timezone
 
 class CourseService:
     @staticmethod
@@ -27,7 +28,7 @@ class CourseService:
         .join(Grade, (Grade.tp_course_id == TermProgramCourse.id) & (Grade.student_id == student_id))
         .filter(TermProgramCourse.term_id == term_id, TermProgramCourse.program_id == program_id).all()
     )
-           
+
     @staticmethod
     def get_course(course_id):
         return Course.query.filter_by(id=course_id).first()
@@ -174,13 +175,16 @@ class CourseService:
                 g.id grade_id,
                 g.final_grade,
                 g.final_gpa,
-                g.feedback grade_feedback
+                g.feedback grade_feedback,
+                a.id AS attendance_id,
+                a.attendance_in_percent AS attendance_percent
             from term_program_courses tpc
             join terms t on tpc.term_id=t.id
             join programs p on tpc.program_id=p.id
             join courses c on tpc.course_id=c.id
             join enrollments e on tpc.term_id=e.term_id and tpc.program_id=e.program_id
             join grades g on e.student_id=g.student_id and tpc.id=g.tp_course_id
+            JOIN attendance a ON a.student_id = e.student_id AND a.tp_course_id = tpc.id
             join users ins on tpc.instructor_id=ins.id
             join users stu on e.student_id=stu.id
             where {" and ".join(conditions)}
@@ -195,15 +199,20 @@ class CourseService:
         grade.feedback = feedback
         grade.save()
 
-    # @staticmethod
-    # def get_student_enrollment_info(student_id):
-    #     enrollment = (Enrollment.query
-    #                   .filter_by(student_id=student_id, status=1)
-    #                   .first())
-    #     term_id = enrollment.term_id
-    #     program_id = enrollment.program_id
-    #     term = Term.query.filter_by(id=term_id).first()
-    #     program = Program.query.filter_by(id=program_id).first()
-    #     courses = (TermProgramCourse.query
-    #      .filter_by(term_id=term_id, program_id=program_id)
-    #      .all())
+    @staticmethod
+    def update_grade(grade_id, final_grade):
+        grade = Grade.query.filter_by(id=grade_id).first()
+        if grade:
+            grade.final_grade = final_grade
+            grade.update_time = datetime.now(timezone.utc)
+            grade.save()
+
+
+    @staticmethod
+    def update_attendance(attendance_id, attendance):
+        record = Attendance.query.filter_by(id=attendance_id).first()
+        if record:
+            record.attendance_in_percent = attendance
+            record.update_time = datetime.now(timezone.utc)
+            record.save()
+            

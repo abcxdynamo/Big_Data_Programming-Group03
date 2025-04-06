@@ -3,8 +3,8 @@
     <el-form-item label="Email">
       <el-input v-model="query_form.email" placeholder="Please Input Email" style="width:200px;"></el-input>
     </el-form-item>
-    <el-form-item label="Course">
-      <el-input v-model="query_form.course_name" placeholder="Please Input Course Name" style="width:200px;"></el-input>
+    <el-form-item label="Program">
+      <el-input v-model="query_form.program_name" placeholder="Please Input Program Name" style="width:200px;"></el-input>
     </el-form-item>
     <el-form-item>
       <el-button type="primary" @click="queryData">Query</el-button>
@@ -12,24 +12,18 @@
     </el-form-item>
   </el-form>
   <el-table :data="paginated_data" v-loading="loading" style="width: 100%" border>
-    <el-table-column prop="student_name" label="Student Name"></el-table-column>
-    <el-table-column prop="student_email" label="Email"></el-table-column>
-    <el-table-column prop="term" label="Term">
+    <el-table-column prop="student_name" label="Student Name" width = "200"></el-table-column>
+    <el-table-column prop="student_email" label="Email" width = "200"></el-table-column>
+    <el-table-column prop="term" label="Term" width = "200">
       <template #default="scope">
         {{ scope.row.term_year }}-{{ scope.row.term_season }}-{{ scope.row.term_section }}
       </template>
     </el-table-column>
-    <el-table-column prop="program_name" label="Program">
+    <el-table-column prop="program_name" label="Program" width = "450">
       <template #default="scope">
         {{ scope.row.program_code }}-{{ scope.row.program_name }}
       </template>
     </el-table-column>
-    <el-table-column prop="course" label="Course">
-      <template #default="scope">
-        {{ scope.row.course_code }}-{{ scope.row.course_name }}
-      </template>
-    </el-table-column>
-    <el-table-column prop="final_grade" label="Grade"></el-table-column>
     <el-table-column label="Actions">
       <template #default="scope">
         <el-button v-if="scope.row.student_is_active" type="danger" size="small"
@@ -63,6 +57,7 @@ export default {
   data() {
     return {
       query_form: {},
+      all_students: [],
       student_grades: [],
       current_page: 1,
       page_size: 10,
@@ -95,26 +90,33 @@ export default {
     },
     queryData() {
       this.loading = true;
-      let student_grades = reactive(this.student_grades);
+      let filtered = this.all_students;
       if (this.query_form.email) {
-        student_grades = this.student_grades.filter(item => _.includes(item.student_email, this.query_form.email));
+        const emailKeyword = this.query_form.email.toLowerCase();
+        filtered = filtered.filter(item =>item.student_email?.toLowerCase().includes(emailKeyword));
       }
-      if (this.query_form.course_name) {
-        student_grades = this.student_grades.filter(item => _.includes(item.course_name, this.query_form.course_name));
+      if (this.query_form.program_name) {
+        const programKeyword = this.query_form.program_name.toLowerCase();
+        filtered = filtered.filter(item =>item.program_name?.toLowerCase().includes(programKeyword));
       }
-      this.student_grades = student_grades;
+      this.student_grades = filtered;
+      this.current_page = 1; // Reset to first page
       this.loading = false;
     },
     resetForm() {
       this.query_form = {};
-      this.query_student_grades();
+      this.student_grades = this.all_students;
+      this.current_page = 1;
     },
     get_login_user_id() {
       return JSON.parse(localStore.get("user"))["user_id"];
     },
     async query_student_grades() {
       this.loading = true;
-      this.student_grades = await api.get(`/api/grades/list`);
+      const all_grades = await api.get(`/api/grades/list`);
+      const grouped = _.chain(all_grades).groupBy('student_id').map((entries, student_id) => entries[0]).value();
+      this.all_students = grouped;
+      this.student_grades = grouped;
       await this.update_students_info();
       this.loading = false;
     },

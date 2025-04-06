@@ -1,21 +1,67 @@
 <template>
     <h3>Student Grades & Attendance</h3>
+    <el-select v-model="selectedCourse" placeholder="Select a course" @change="onCourseChange" style="margin-bottom: 16px;">
+    <el-option
+      v-for="course in instructor_courses"
+      :key="course.course_id"
+      :label="course.course_name"
+      :value="course.course_id"
+    />
+    </el-select>
       <el-table :data="student_grades" style="width: 100%" border>
-        <el-table-column prop="student_name" label="Student Name" width="180"></el-table-column>
-        <el-table-column prop="student_email" label="Email" width="200"></el-table-column>
-        <el-table-column prop="final_grade" label="Grade" width="100">
-        </el-table-column>
-        <el-table-column prop="feedback" label="Feedback">
-          <template #default="scope">
-            <el-input v-model="scope.row.edit_feedback" placeholder="Provide feedback"/>
+        <el-table-column prop="student_name" label="Student Name" width=""></el-table-column>
+        <el-table-column prop="student_email" label="Email" width=""></el-table-column>
+        <el-table-column prop="final_grade" label="Grade" width="">
+            <template #default="scope">
+              <el-input-number 
+                v-model="scope.row.edit_grade"
+                :min="0"
+                :max="100"
+                :step="1"
+                :disabled="!scope.row.editing"
+                :controls="false"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="attendance" label="Attendance (%)" width="">
+            <template #default="scope">
+              <el-input-number
+                v-model="scope.row.edit_attendance"
+                :min="0"
+                :max="100"
+                :step="1"
+                :disabled="!scope.row.editing"
+                :controls="false"
+              />
           </template>
         </el-table-column>
-        <el-table-column label="Actions" width="100">
+        <el-table-column label="Actions" width="200">
           <template #default="scope">
             <el-button
-                :disabled="(!!scope.row.edit_feedback && scope.row.edit_feedback)===(!!scope.row.grade_feedback && scope.row.grade_feedback)"
-                type="primary" size="small" @click="save_grade_feedback(scope.row)">Save
+              v-if="!scope.row.editing"
+              type="primary" 
+              size="small"
+              @click="enableEditing(scope.row)"
+            >
+              Edit
             </el-button>
+            
+            <div v-else>
+              <el-button
+                type="success"
+                size="small"
+                @click="saveChanges(scope.row)"
+              >
+                Save
+              </el-button>
+              <el-button
+                type="danger"
+                size="small"
+                @click="cancelEditing(scope.row)"
+              >
+                Cancel
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -35,16 +81,17 @@ export default {
       term: {},
       program: {},
       student_grades: [],
-    }
+      selectedCourse: null,
+    };
   },
-  computed: {},
   async created() {
     this.user_id = this.$route.params.id || this.get_login_user_id();
     await this.get_user_info();
     await this.get_instructor_courses();
-    await this.query_instructor_student_grades();
-  },
-  mounted() {
+    if (this.instructor_courses.length > 0) {
+      this.selectedCourse = this.instructor_courses[0].course_id;
+      await this.query_instructor_student_data();
+    }
   },
   methods: {
     handleLogout() {
@@ -59,29 +106,70 @@ export default {
     async get_instructor_courses() {
       this.instructor_courses = await api.get(`/api/instructor/courses?instructor_id=${this.user_id}`);
     },
-    async query_instructor_student_grades() {
-      const student_grades = await api.get(`/api/grades/list?instructor_id=${this.user_id}`);
-      const student_ids = student_grades.map(s => s["student_id"]);
-      const user_infos = await this.query_user_infos(student_ids);
-      _.each(student_grades, s => {
-        s["edit_feedback"] = s["grade_feedback"];
-        const user = user_infos[s["student_id"]];
-        s["student_name"] = user["first_name"] + " " + user["last_name"];
-        s["student_email"] = user["email"];
-      })
-      this.student_grades = student_grades;
+    async onCourseChange() {
+      await this.query_instructor_student_data();
+    },
+    async query_instructor_student_data() {
+      if (!this.selectedCourse) return;
+
+      try {
+        const response = await api.get(
+          `/api/grades/list?instructor_id=${this.user_id}&course_id=${this.selectedCourse}`
+        );
+        const student_ids = response.map(s => s.student_id);
+        const user_infos = await this.query_user_infos(student_ids);
+        this.student_grades = response.map(s => ({
+          ...s,
+          student_name: `${user_infos[s.student_id]?.first_name || ""} ${user_infos[s.student_id]?.last_name || ""}`,
+          student_email: user_infos[s.student_id]?.email || "",
+          edit_grade: s.final_grade,
+          edit_attendance: s.attendance_percent,
+          grade_id: s.grade_id,
+          attendance_id: s.attendance_id,
+          editing: false
+        }));
+      } catch (error) {
+        console.error("Failed to load student records:", error);
+      }
+      // this.student_grades = student_grades;
     },
     async query_user_infos(user_ids) {
-      const users = await api.post(`/api/users/list`, {"ids": _.uniq(user_ids)});
+      const users = await api.post(`/api/users/list`, { ids: _.uniq(user_ids) });
       return _.reduce(users, (result, user) => {
         result[user.id] = user;
         return result;
       }, {});
     },
-    async save_grade_feedback(row) {
-      await api.post(`/api/grades/${row.grade_id}/feedback`, {"feedback": row["edit_feedback"]});
-      ElMessage.success(`save success.`)
-      await this.query_instructor_student_grades();
+    enableEditing(row) {
+      row.editing = true;
+    },
+    cancelEditing(row) {
+      row.edit_grade = row.final_grade;
+      row.edit_attendance = row.attendance_percent;
+      row.editing = false;
+    },
+    async saveChanges(row) {
+      try {
+        // Save grade
+        await api.post(`/api/grades/${row.grade_id}/update`, {
+          final_grade: row.edit_grade
+        });
+
+        // Save attendance
+        await api.post(`/api/attendance/${row.attendance_id}/update`, {
+          attendance: row.edit_attendance
+        });
+
+        ElMessage.success("Changes saved successfully.");
+
+        // Update UI values
+        row.final_grade = row.edit_grade;
+        row.attendance = row.edit_attendance;
+        row.editing = false;
+      } catch (err) {
+        ElMessage.error("Failed to save changes.");
+        console.error(err);
+      }
     }
   }
 };

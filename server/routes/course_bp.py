@@ -79,3 +79,19 @@ def save_grade_feedback(grade_id):
     feedback = data.get('feedback')
     CourseService.save_grade_feedback(grade_id, feedback)
     return OK
+
+
+@course_bp.route('/grades/<int:grade_id>/update', methods=['POST'])
+def update_grade(grade_id):
+    data = request.parsed_data
+    final_grade = data.get('final_grade')
+    CourseService.update_grade(grade_id, final_grade)
+    return OK
+
+
+@course_bp.route('/attendance/<int:attendance_id>/update', methods=['POST'])
+def update_attendance(attendance_id):
+    data = request.parsed_data
+    attendance = data.get('attendance')
+    CourseService.update_attendance(attendance_id, attendance)
+    return OK

@@ -1,4 +1,16 @@
 <template>
+  <el-form ref="queryFormRef" :inline="true" :model="query_form" label-position="left" style="text-align: left;">
+    <el-form-item label="Email">
+      <el-input v-model="query_form.email" placeholder="Please Input Email" style="width:200px;"></el-input>
+  </el-form-item>
+  <el-form-item label="Program">
+      <el-input v-model="query_form.program_name" placeholder="Please Input Program Name" style="width:200px;"></el-input>
+  </el-form-item>
+  <el-form-item>
+      <el-button type="primary" @click="filterInstructors">Search</el-button>
+      <el-button @click="resetFilters">Reset</el-button>
+    </el-form-item>
+  </el-form>
   <el-table :data="paginated_data" style="width: 100%" border>
     <el-table-column prop="term" label="Term">
       <template #default="scope">
@@ -51,7 +63,9 @@ import {reactive} from 'vue'
 export default {
   data() {
     return {
+      query_form: {},
       instructor_courses: [],
+      all_instructors: [],
       current_page: 1,
       page_size: 10,
     }
@@ -76,11 +90,36 @@ export default {
     handlePageChange(page) {
       this.current_page = page;
     },
+    filterInstructors() {
+      let filtered = this.all_instructors;
+      if (this.query_form.email) {
+        const keyword = this.query_form.email.toLowerCase();
+        filtered = filtered.filter(item =>
+          item.instructor_email?.toLowerCase().includes(keyword)
+        );
+      }
+      if (this.query_form.program_name) {
+        const keyword = this.query_form.program_name.toLowerCase();
+        filtered = filtered.filter(item =>
+          item.program_name?.toLowerCase().includes(keyword)
+        );
+      }
+      this.instructor_courses = filtered;
+      this.current_page = 1;
+    },
+    resetFilters() {
+      this.query_form = {};
+      this.instructor_courses = this.all_instructors;
+      this.current_page = 1;
+    },
+
     get_login_user_id() {
       return JSON.parse(localStore.get("user"))["user_id"];
     },
     async query_instructor_courses() {
-      this.instructor_courses = await api.get(`/api/instructor/courses`);
+      const courses = await api.get(`/api/instructor/courses`);
+      this.all_instructors = courses;
+      this.instructor_courses = courses;
       await this.update_instructors_info();
     },
     async update_instructors_info(ids = []) {

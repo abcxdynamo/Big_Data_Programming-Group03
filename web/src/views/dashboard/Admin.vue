@@ -2,7 +2,7 @@
   <div class="admin-container">
     <img src="@/assets/applogo.png" alt="App Icon" class="app-icon" />
     <el-link style="position:absolute;top:10px;right:20px;" @click="handleLogout">
-      <el-icon><SwitchButton/></el-icon>logout
+      <el-icon><SwitchButton/></el-icon>Logout
     </el-link>
     <el-card class="admin-card">
       <h2>Admin Dashboard</h2>
@@ -10,10 +10,10 @@
         <el-tab-pane label="Dashboard" name="Dashboard">
           <AdminDashboard></AdminDashboard>
         </el-tab-pane>
-        <el-tab-pane label="InstructorCourses" name="InstructorCourses">
+        <el-tab-pane label="Course Instructors " name="Course Instructors">
           <AdminInstructorCourse></AdminInstructorCourse>
         </el-tab-pane>
-        <el-tab-pane label="StudentGrades" name="StudentGrades">
+        <el-tab-pane label="Student Records" name="Student Records">
           <AdminStudentGrade></AdminStudentGrade>
         </el-tab-pane>
       </el-tabs>
