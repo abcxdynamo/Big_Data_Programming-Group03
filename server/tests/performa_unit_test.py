@@ -16,6 +16,7 @@ from performa import app, db
 from models.user.user import User
 from models.user.user_role import UserRole
 from models.user.user_token import UserToken
+from models.grade.grade import Grade
 
 class TestLogin(unittest.TestCase):
     @classmethod
@@ -42,7 +43,7 @@ class TestLogin(unittest.TestCase):
                     UserRole(id=3, name="ADMIN")
                 ]
                 db.session.bulk_save_objects(roles)
-                
+            
             if not db.session.query(User).filter_by(id=9999).first():
                 user = User(
                     id=9999,
@@ -56,18 +57,36 @@ class TestLogin(unittest.TestCase):
                     is_deleted=False
                 )
                 db.session.add(user)
-            
+                
+            # Create test grade
+            self.test_grade = Grade(
+                student_id=9999,
+                tp_course_id=1,
+                final_grade=85.5,
+                final_gpa=3.7,
+                feedback="Initial feedback",
+                create_time=datetime.now(timezone.utc),
+                update_time=datetime.now(timezone.utc),
+                is_deleted=False
+            )
+            db.session.add(self.test_grade)
+
             db.session.commit()
 
     def tearDown(self):
         with app.app_context():
-            # Delete only test data
-            db.session.query(UserToken).delete()
-            db.session.query(User).filter_by(id=9999).delete()
-            db.session.commit()
+            # Delete only tokens related to the test user to avoid FK issues
+            db.session.query(UserToken).filter_by(user_id=9999).delete()
+            db.session.query(Grade).filter_by(student_id=9999).delete()
+            # Reset the user to active in case a test deactivated it
+            user = db.session.query(User).filter_by(id=9999).first()
+            if user:
+                user.is_active = True
+                db.session.commit()
+
             db.session.remove()
 
-    def test_send_otp_success(self):
+    def test_01_send_otp_success(self):
         """Test successful OTP sending"""
         print(f"{Fore.YELLOW}➤ Testing valid OTP request...{Style.RESET_ALL}", end=" ")
         response = self.client.post(
@@ -85,7 +104,7 @@ class TestLogin(unittest.TestCase):
             print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
             raise
 
-    def test_send_otp_invalid_email(self):
+    def test_02_send_otp_invalid_email(self):
         """Test OTP sending with invalid email"""
         print(f"{Fore.YELLOW}➤ Testing invalid email request...{Style.RESET_ALL}", end=" ")
         response = self.client.post(
@@ -103,7 +122,7 @@ class TestLogin(unittest.TestCase):
             print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
             raise
 
-    def test_send_otp_inactive_user(self):
+    def test_03_send_otp_inactive_user(self):
         """Test OTP sending for inactive user"""
         print(f"{Fore.YELLOW}➤ Testing inactive user request...{Style.RESET_ALL}", end=" ")
         with app.app_context():
@@ -126,7 +145,7 @@ class TestLogin(unittest.TestCase):
             print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
             raise
 
-    def test_verify_otp_success(self):
+    def test_04_verify_otp_success(self):
         """Test successful OTP verification"""
         print(f"{Fore.YELLOW}➤ Testing valid OTP verification...{Style.RESET_ALL}", end=" ")
         otp_response = self.client.post(
@@ -153,11 +172,11 @@ class TestLogin(unittest.TestCase):
             print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
             raise
 
-    def test_verify_otp_expired(self):
+    def test_05_verify_otp_expired(self):
         """Test expired OTP verification"""
         print(f"{Fore.YELLOW}➤ Testing expired OTP verification...{Style.RESET_ALL}", end=" ")
         self.client.post('/api/send-otp',
-                       json={'email': 'testuser@conestogac.on.ca'})
+                         json={'email': 'testuser@conestogac.on.ca'})
         
         with patch('models.user.user_token.utcnow') as mock_utcnow:
             mock_utcnow.return_value = datetime.now(timezone.utc) + timedelta(minutes=10)
@@ -179,6 +198,46 @@ class TestLogin(unittest.TestCase):
         except AssertionError:
             print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
             raise
+        
+    def test_06_get_grade_success(self):
+        """Test successful grade retrieval"""
+        print(f"{Fore.YELLOW}➤ Testing grade retrieval...{Style.RESET_ALL}", end=" ")
+        try:
+            response = self.client.get(
+                f'/api/grades/1/1?student_id=9999&course_id=1'
+            )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data)
+            self.assertEqual(data['code'], 200)
+            self.assertTrue(data['success'])
+            self.assertIn('data', data)
+            grade_data = data['data']
+        # If the response is a list, we need to loop through to check each item
+            for grade in grade_data:
+                self.assertIn('final_grade', grade)  # Check if 'final_grade' exists
+                self.assertIn('final_gpa', grade)    # Check if 'final_gpa' exists
+                self.assertEqual(grade['final_grade'], 85.5)  # Validate the value of final_grade
+                self.assertEqual(grade['final_gpa'], 3.7)     # Validate the value of final_gpa
+            print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
+        except Exception as e:
+            print(f"{Fore.RED}FAILED: {str(e)}{Style.RESET_ALL}")
+            raise
+
+    def test_07_get_grade_not_found(self):
+        """Test grade retrieval with non-existing grade"""
+        print(f"{Fore.YELLOW}➤ Testing grade retrieval for non-existent grade...{Style.RESET_ALL}", end=" ")
+        try:
+            response = self.client.get('/api/grades/1/1?student_id=9999&course_id=2') # No grade added for course_id=2
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data)
+            self.assertEqual(data['code'], 200)
+            self.assertTrue(data['success'])
+            self.assertEqual(data['data'], {}) # No record returned
+            print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
+        except Exception as e:
+            print(f"{Fore.RED}FAILED: {str(e)}{Style.RESET_ALL}")
+            raise
+        
 
 if __name__ == '__main__':
     # Create a test suite
