@@ -62,30 +62,6 @@ export default {
     },
     async get_instructor_courses() {
       this.instructor_courses = await api.get(`/api/instructor/courses?instructor_id=${this.user_id}`);
-    },
-    async query_instructor_student_grades() {
-      const student_grades = await api.get(`/api/grades/list?instructor_id=${this.user_id}`);
-      const student_ids = student_grades.map(s => s["student_id"]);
-      const user_infos = await this.query_user_infos(student_ids);
-      _.each(student_grades, s => {
-        s["edit_feedback"] = s["grade_feedback"];
-        const user = user_infos[s["student_id"]];
-        s["student_name"] = user["first_name"] + " " + user["last_name"];
-        s["student_email"] = user["email"];
-      })
-      this.student_grades = student_grades;
-    },
-    async query_user_infos(user_ids) {
-      const users = await api.post(`/api/users/list`, {"ids": _.uniq(user_ids)});
-      return _.reduce(users, (result, user) => {
-        result[user.id] = user;
-        return result;
-      }, {});
-    },
-    async save_grade_feedback(row) {
-      await api.post(`/api/grades/${row.grade_id}/feedback`, {"feedback": row["edit_feedback"]});
-      ElMessage.success(`save success.`)
-      await this.query_instructor_student_grades();
     }
   }
 };
