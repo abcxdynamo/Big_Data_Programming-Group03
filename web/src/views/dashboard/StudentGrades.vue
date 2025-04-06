@@ -56,7 +56,7 @@ export default {
       this.program = await api.get(`/api/programs/${program_id}`);
     },
     async get_term_program_courses(term_id, program_id) {
-      const term_program_courses = await api.get(`/api/term_program_courses/${term_id}/${program_id}`);
+      const term_program_courses = await api.get(`/api/term_program_courses/${term_id}/${program_id}/${this.user_id}`);
       const course_ids = term_program_courses.map(course => course.id);
       const courses = await this.get_courses(course_ids);
       const course_grades = await this.get_grades(term_id, program_id, this.user_id);
