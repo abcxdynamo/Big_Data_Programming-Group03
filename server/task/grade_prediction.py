@@ -144,13 +144,13 @@ def predict_and_update_gpa():
                             predicted_average = source.predicted_average,
                             update_time = GETDATE()
                     WHEN NOT MATCHED THEN
-                        INSERT (student_id, term_id, predicted_gpa, predicted_average)
+                        INSERT (student_id, term_id, predicted_gpa, predicted_average, predicted_career)
                         VALUES (source.student_id, source.term_id, 
-                                source.predicted_gpa, source.predicted_average);
+                                source.predicted_gpa, source.predicted_average, "Others");
                 """
                 SQL_MySQL = """
-                    INSERT INTO performance_predictions (student_id, term_id, predicted_gpa, predicted_average, prediction_date, create_time, update_time, is_deleted)
-                    VALUES (:student_id, :term_id, :predicted_gpa, :predicted_average, NOW(), NOW(), NOW(), 0)
+                    INSERT INTO performance_predictions (student_id, term_id, predicted_gpa, predicted_average, prediction_date, predicted_career, create_time, update_time, is_deleted)
+                    VALUES (:student_id, :term_id, :predicted_gpa, :predicted_average, NOW(), "Others", NOW(), NOW(), 0)
                     ON DUPLICATE KEY UPDATE
                         predicted_gpa = VALUES(predicted_gpa),
                         predicted_average = VALUES(predicted_average),

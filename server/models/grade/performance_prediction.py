@@ -12,6 +12,7 @@ class PerformancePrediction(BaseModel):
     predicted_gpa = db.Column(db.Numeric(3, 2), nullable=False)
     predicted_average = db.Column(db.Numeric(5, 2), nullable=False)
     prediction_date = db.Column(db.DateTime, default=utcnow)
+    predicted_career = db.Column(db.String(300), nullable=False, default='Others')
 
     __table_args__ = (
         UniqueConstraint('student_id', 'term_id', name='uq_student_term_prediction'),
