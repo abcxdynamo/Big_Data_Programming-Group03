@@ -14,14 +14,12 @@ engine = create_engine(config.DB_URI)
 # Conestoga GPA conversion
 def grade_to_gpa(grade):
     if grade >= 90: return 4.0
-    elif grade >= 85: return 3.9
-    elif grade >= 80: return 3.7
-    elif grade >= 75: return 3.3
+    elif grade >= 80: return 3.75
+    elif grade >= 75: return 3.50
     elif grade >= 70: return 3.0
-    elif grade >= 65: return 2.7
-    elif grade >= 60: return 2.3
-    elif grade >= 55: return 2.0
-    elif grade >= 50: return 1.7
+    elif grade >= 65: return 2.5
+    elif grade >= 60: return 2.0
+    elif grade >= 55: return 1
     else: return 0.0
 
 def get_training_data():
@@ -115,7 +113,7 @@ def predict_and_update_gpa():
                     total_credits += course['credits']
                     # Calculate weighted average components
                     weighted_grade_factor = final_grade * course['credits']
-                    total_credit_value = 100 * course['credits']  # Max grade is 100
+                    total_credit_value = course['credits']  # Max grade is 100
                     
                     sum_weighted_grade += weighted_grade_factor
                     sum_total_credit_value += total_credit_value
@@ -123,7 +121,7 @@ def predict_and_update_gpa():
                 if total_credits > 0:
                     term_gpa = round(weighted_gpa / total_credits, 2)
                     # Calculate term weighted average
-                    weighted_average = round((sum_weighted_grade / sum_total_credit_value)*100,2)
+                    weighted_average = round((sum_weighted_grade / sum_total_credit_value),2)
                     predictions.append({
                         'student_id': int(student_id),
                         'term_id': int(term_id),

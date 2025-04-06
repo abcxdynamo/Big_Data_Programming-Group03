@@ -22,7 +22,8 @@ export default {
       enrollment: {},
       term: {},
       program: {},
-      term_program_courses: []
+      term_program_courses: [],
+      predicted_average: null
     }
   },
   computed: {
@@ -70,10 +71,16 @@ export default {
         const instructor = instructors[tpc.instructor_id];
         tpc.course_instructor = instructor["first_name"] + ' ' + instructor["last_name"];
       });
+      const predictionData = await api.get(`/api/performance_predictions?student_id=${this.user_id}`);
+      const latestPrediction = _.last(_.sortBy(predictionData, 'term_id'));
+      this.predicted_average = latestPrediction ? parseFloat(latestPrediction.predicted_average) : null;
       term_program_courses.push({
-        course_code: "",
-        course_name: "Total",
+        course_instructor: "Total",
         course_grade: _.sumBy(term_program_courses, "course_grade"),
+      },
+      {
+        course_instructor: "Predicted Weighted Average",
+        course_grade: this.predicted_average,
       })
       this.term_program_courses = term_program_courses;
     },
