@@ -146,6 +146,7 @@ class CourseService:
                 e.student_id,
                 g.id grade_id,
                 g.final_grade,
+                g.final_gpa,
                 g.feedback grade_feedback
             from term_program_courses tpc
             join terms t on tpc.term_id=t.id
