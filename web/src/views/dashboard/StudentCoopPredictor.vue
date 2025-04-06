@@ -1,7 +1,11 @@
 <template>
+    <div>
         <h3>Co-op Prediction</h3>
         <el-progress :percentage="coop.coopPrediction" status="success" />
-  </template>
+        <p><strong>Chance:</strong> {{ coop.coopPrediction }}%</p>
+        <p><strong>Advice:</strong> {{ coop.careerAdvice }}</p>
+    </div>
+</template>
   
   <script>
   import { defineComponent, ref, onMounted } from 'vue';
@@ -13,8 +17,8 @@
     data() {
       return {
         coop: {
-          coopPrediction: 85,
-          careerAdvice: 'Consider specializing in AI and Data Science for better opportunities.'
+          coopPrediction: 0,
+          careerAdvice: ''
         },
       }
     },
@@ -24,8 +28,7 @@
     async created() {
       this.user_id = this.$route.params.id || this.get_login_user_id();
       await this.get_user_info();
-      await this.get_enrollment_info();
-      this.render_charts();
+      await this.calculate_coop_prediction();
     },
     mounted() {
   
@@ -58,6 +61,32 @@
           return result;
         }, {});
       },
+      async calculate_coop_prediction() {
+        const allPredictions = await api.get(`/api/performance_predictions`);
+        const sorted = _.orderBy(allPredictions, 'predicted_average', 'desc');
+        const studentPrediction = sorted.find(p => p.student_id === this.user_id);
+        if (!studentPrediction || studentPrediction.predicted_average < 80) {
+          this.coop = {
+            coopPrediction: 0,
+            careerAdvice: "Work on improving your average to qualify for co-op."
+          };
+          return;
+        }
+        const rank = sorted.findIndex(p => p.student_id === this.user_id) + 1;
+        if (rank <= 10) {
+          this.coop = {
+            coopPrediction: 100,
+            careerAdvice: "Great job! You're in the top 10 for co-op eligibility."
+          };
+        } else {
+          const scale = Math.max(100 - (rank - 10) * 2, 30);
+          this.coop = {
+            coopPrediction: scale,
+            careerAdvice: "You're eligible, but improve your rank to get selected."
+          };
+        }
+        console.log(this.coop)
+      }
     }
   };
   </script>

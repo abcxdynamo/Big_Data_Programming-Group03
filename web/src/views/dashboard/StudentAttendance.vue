@@ -71,8 +71,7 @@ export default {
         tpc.course_instructor = instructor["first_name"] + ' ' + instructor["last_name"];
       });
       term_program_courses.push({
-        course_code: "",
-        course_name: "Average",
+        course_instructor: "Average",
         course_attendance: _.meanBy(term_program_courses, "course_attendance"),
       })
       this.term_program_courses = term_program_courses;
