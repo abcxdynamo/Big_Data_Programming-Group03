@@ -82,6 +82,7 @@ def save_grade_feedback(grade_id):
 
 
 @course_bp.route('/grades/<int:grade_id>/update', methods=['POST'])
+@auth_required()
 def update_grade(grade_id):
     data = request.parsed_data
     final_grade = data.get('final_grade')
@@ -90,6 +91,7 @@ def update_grade(grade_id):
 
 
 @course_bp.route('/attendance/<int:attendance_id>/update', methods=['POST'])
+@auth_required()
 def update_attendance(attendance_id):
     data = request.parsed_data
     attendance = data.get('attendance')

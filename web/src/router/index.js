@@ -7,6 +7,7 @@ import Student from '../views/dashboard/Student.vue'
 import StudentInfo from '../views/dashboard/StudentInfo.vue'
 import InstructorInfo from '../views/dashboard/InstructorInfo.vue'
 import Admin from '../views/dashboard/Admin.vue'
+import Notifications from '../views/notifications/Notifications.vue'
 import Forbidden from '../views/error/Forbidden.vue'
 import PageNotFound from '../views/error/PageNotFound.vue'
 
@@ -23,6 +24,7 @@ const router = createRouter({
         {path: '/instructor', component: InstructorInfo, meta: {requiresAuth: true, roles: ['INSTRUCTOR']}},
         {path: '/instructor/:id', component: InstructorInfo, meta: {requiresAuth: true, roles: ['INSTRUCTOR']}},
         {path: '/admin', component: Admin, meta: {requiresAuth: true, roles: ['ADMIN']}},
+        {path: '/notifications', component: Notifications, meta: {requiresAuth: true, roles: ['STUDENT', 'INSTRUCTOR', 'ADMIN']}},
         {path: '/403', component: Forbidden},
         {path: '/:pathMatch(.*)*', component: PageNotFound}
     ]

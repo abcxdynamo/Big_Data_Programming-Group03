@@ -1,10 +1,10 @@
 <template>
   <el-form ref="queryFormRef" :inline="true" :model="query_form" label-position="left" style="text-align: left;">
     <el-form-item label="Email">
-      <el-input v-model="query_form.email" placeholder="Please Input Email" style="width:200px;"></el-input>
+      <el-input v-model="query_form.email" @keyup.enter.native="filterInstructors" placeholder="Please Input Email" style="width:200px;"></el-input>
   </el-form-item>
   <el-form-item label="Program">
-      <el-input v-model="query_form.program_name" placeholder="Please Input Program Name" style="width:200px;"></el-input>
+      <el-input v-model="query_form.program_name" @keyup.enter.native="filterInstructors" placeholder="Please Input Program Name" style="width:200px;"></el-input>
   </el-form-item>
   <el-form-item>
       <el-button type="primary" @click="filterInstructors">Search</el-button>

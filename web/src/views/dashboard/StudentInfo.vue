@@ -1,6 +1,9 @@
 <template>
   <div class="student-container">
     <img src="@/assets/applogo.png" alt="App Icon" class="app-icon" />
+    <div style="position:absolute;top:11px;right:82px;">
+      <NotificationButton />
+    </div>
     <el-link style="position:absolute;top:10px;right:20px;" @click="handleLogout">
       <el-icon><SwitchButton/></el-icon>Logout
     </el-link>
@@ -39,9 +42,10 @@ import StudentAttendance from './StudentAttendance.vue';
 import StudentDashboard from './StudentDashboard.vue';
 import StudentCoopPredictor from './StudentCoopPredictor.vue';
 import StudentCareerSuggester from './StudentCareerSuggester.vue';
+import NotificationButton from "@/views/notifications/NotificationButton.vue";
 
 export default {
-  components: {StudentDashboard, StudentAttendance, StudentGrades, StudentCoopPredictor, StudentCareerSuggester, SwitchButton},
+  components: {StudentDashboard, StudentAttendance, StudentGrades, StudentCoopPredictor, StudentCareerSuggester, SwitchButton, NotificationButton},
   data() {
     return {
       activeTabName: "Dashboard",

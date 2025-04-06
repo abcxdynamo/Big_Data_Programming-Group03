@@ -15,6 +15,7 @@
             <template #default="scope">
               <el-input-number 
                 v-model="scope.row.edit_grade"
+                @keyup.enter.native="saveChanges(scope.row)"
                 :min="0"
                 :max="100"
                 :step="1"
@@ -27,6 +28,7 @@
             <template #default="scope">
               <el-input-number
                 v-model="scope.row.edit_attendance"
+                @keyup.enter.native="saveChanges(scope.row)"
                 :min="0"
                 :max="100"
                 :step="1"
