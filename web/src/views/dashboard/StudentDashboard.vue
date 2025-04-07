@@ -14,6 +14,7 @@
                 <el-option label="All" value="all" />
                 <el-option label="GPA Trends" value="gpa" />
                 <el-option label="Weighted Averages" value="average" />
+                <el-option label="Rank" value="rank" />
               </el-select>
             </div>
       <!-- GPA Chart -->
@@ -24,6 +25,10 @@
       <!-- Weighted Average Chart -->
       <div v-show="selectedChart === 'all' || selectedChart === 'average'" class="bar-chart-container">
         <div class="avg-bar-chart"></div>
+      </div>
+      <!-- Rank Donut Chart -->
+      <div v-show="selectedChart === 'all' || selectedChart === 'rank'" class="rank-chart-container">
+        <div class="rank-chart"></div>
       </div>
     </div>
     <el-button type="primary" @click="exportDashboardReport" style="margin-bottom: 16px;">
@@ -95,6 +100,7 @@ export default {
           text: 'Weighted Average Trends', left: 'center', top: '5', textStyle: { fontSize: 12 }
         },
       },
+      rankChartOptions: {},
     }
   },
   computed: {
@@ -106,6 +112,7 @@ export default {
     await this.get_enrollment_info();
     await this.load_prediction_data();
     await this.load_average_comparison();
+    await this.load_rank_chart();
     // this.render_charts();
   },
   mounted() {
@@ -188,6 +195,67 @@ export default {
       this.barChartInstance = echarts.init(chartDom);
       this.barChartInstance.setOption(this.averageComparisonOptions);
     },
+    async load_rank_chart() {
+      const all_grades = await api.get(`/api/grades/list`);
+      const myGrade = all_grades.find(g => g.student_id === this.user_id);
+      if (!myGrade) {
+        console.warn("No grade found for current student.");
+        return;
+      }
+      const currentLevel = myGrade.program_level;
+      const peer_grades = all_grades.filter(g =>
+        g.program_id === myGrade.program_id &&
+        g.program_level === currentLevel
+      );
+
+      const gradeMap = {};
+      peer_grades.forEach(g => {
+        if (!gradeMap[g.student_id]) gradeMap[g.student_id] = [];
+        gradeMap[g.student_id].push(g);
+      });
+
+      const weighted = Object.entries(gradeMap).map(([sid, grades]) => {
+        let sum = 0, total = 0;
+        grades.forEach(g => {
+          if (g.final_grade && g.credits) {
+            sum += g.final_grade * g.credits;
+            total += g.credits;
+          }
+        });
+        return { student_id: sid, avg: total > 0 ? sum / total : 0 };
+      });
+
+      const sorted = _.orderBy(weighted, 'avg', 'desc');
+      const rank = sorted.findIndex(s => s.student_id == this.user_id) + 1;
+      const total = sorted.length;
+
+      this.rankChartOptions = {
+        title: {
+          text: `Your Rank: ${rank}`,
+          left: 'center',
+          top: 'center',
+          textStyle: { fontSize: 14, fontWeight: 'bold' }
+        },
+        series: [
+          {
+            type: 'pie',
+            radius: ['60%', '80%'],
+            avoidLabelOverlap: false,
+            label: { show: false },
+            labelLine: { show: false },
+            data: [
+              { value: rank - 1, name: 'Higher Rank', itemStyle: { color: '#d3d3d3' } },
+              { value: 1, name: 'You', itemStyle: { color: '#4caf50' } },
+              { value: total - rank, name: 'Lower Rank', itemStyle: { color: '#a9a9a9' } }
+            ]
+          }
+        ]
+      };
+
+      const chartDom = document.querySelector('.rank-chart');
+      this.rankChartInstance = echarts.init(chartDom);
+      this.rankChartInstance.setOption(this.rankChartOptions);
+    },
     exportDashboardReport() {
       const element = this.$refs.reportRef;
       const dropdown = this.$refs.chartDropdown;
@@ -209,7 +277,7 @@ export default {
 
 <style scoped>
 
-.chart-container, .bar-chart-container {
+.chart-container, .bar-chart-container, .rank-chart-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -219,7 +287,7 @@ export default {
   overflow: visible;
 }
 
-.chart, .avg-bar-chart {
+.chart, .avg-bar-chart, .rank-chart {
   width: 50%;
   height: 100%;
 }

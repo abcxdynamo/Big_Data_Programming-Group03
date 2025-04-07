@@ -29,7 +29,7 @@ export default {
         "Data Analyst": "Master SQL, Excel, and BI tools like Power BI or Tableau.",
         "Software Engineer": "Build strong foundations in algorithms and system design.",
         "Database Administrator": "Focus on SQL performance tuning and backup strategies.",
-        "Cloud Engineer": "Get certified in platforms like AWS, Azure, or GCP.",
+        "Cloud Data Engineer": "Get certified in platforms like AWS, Azure, or GCP.",
         "Others": "Explore various domains, and talk to an academic or career advisor for personalized paths."
       }
     };

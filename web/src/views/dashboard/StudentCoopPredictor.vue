@@ -28,6 +28,7 @@
     async created() {
       this.user_id = this.$route.params.id || this.get_login_user_id();
       await this.get_user_info();
+      await this.fetch_grades();
       await this.calculate_coop_prediction();
     },
     mounted() {
@@ -40,7 +41,30 @@
       async get_user_info() {
         this.user_info = await api.get(`/api/users/info/${this.user_id}`);
       },
+      async fetch_grades() {
+        try {
+                const all_grades = await api.get(`/api/grades/list`);
+                this.grades = all_grades.filter(g => g.student_id === this.user_id);
+            } catch (error) {
+                console.error("Error fetching grades:", error);
+            }
+      },            
       async calculate_coop_prediction() {
+        if (this.grades.length === 0) {
+                this.coop = {
+                    coopPrediction: 0,
+                    careerAdvice: "No academic record available for co-op assessment"
+                };
+                return;
+        }
+        const currentLevel = _.maxBy(this.grades, 'term_id')?.program_level;
+        if (!currentLevel || currentLevel > 1) {
+                this.coop = {
+                    coopPrediction: 0,
+                    careerAdvice: "Co-op eligibility is only available for Level 1 students"
+                };
+                return;
+        }
         const allPredictions = await api.get(`/api/performance_predictions`);
         const sorted = _.orderBy(allPredictions, 'predicted_average', 'desc');
         const studentPrediction = sorted.find(p => p.student_id === this.user_id);
