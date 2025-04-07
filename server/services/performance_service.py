@@ -19,6 +19,7 @@ class PerformanceService:
                 "term_id": r.term_id,
                 "predicted_gpa": float(r.predicted_gpa),
                 "predicted_average": float(r.predicted_average),
+                "predicted_career": str(r.predicted_career),
                 "prediction_date": r.prediction_date.isoformat() if r.prediction_date else None
             }
             for r in results

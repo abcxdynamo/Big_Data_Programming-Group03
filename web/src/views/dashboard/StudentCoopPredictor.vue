@@ -40,27 +40,6 @@
       async get_user_info() {
         this.user_info = await api.get(`/api/users/info/${this.user_id}`);
       },
-      async get_courses(ids) {
-        const courses = await api.post(`/api/courses/list`, {"ids": ids});
-        return _.reduce(courses, (result, c) => {
-          result[c.id] = c;
-          return result;
-        }, {})
-      },
-      async get_grades(term_id, program_id, student_id) {
-        const grades = await api.get(`/api/grades/${term_id}/${program_id}?student_id=${student_id}`);
-        return _.reduce(grades, (result, g) => {
-          result[g.course_id] = g["final_grade"];
-          return result;
-        }, {})
-      },
-      async get_instructors(instructor_ids) {
-        const instructors = await api.post(`/api/users/list`, {"ids": instructor_ids});
-        return _.reduce(instructors, (result, instructor) => {
-          result[instructor.id] = instructor;
-          return result;
-        }, {});
-      },
       async calculate_coop_prediction() {
         const allPredictions = await api.get(`/api/performance_predictions`);
         const sorted = _.orderBy(allPredictions, 'predicted_average', 'desc');
