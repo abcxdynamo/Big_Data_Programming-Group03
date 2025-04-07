@@ -1,4 +1,6 @@
 <template>
+    <div>
+    <div ref="reportRef" id="dashboard-report">
         <h3>Student Information</h3>
         <el-descriptions border>
             <el-descriptions-item label="Name">{{ user_info.first_name }} {{ user_info.last_name }}</el-descriptions-item>
@@ -7,12 +9,27 @@
             <el-descriptions-item label="Program">{{ program.name }}</el-descriptions-item>
         </el-descriptions>
             <h3>Performance Trends</h3>
-            <div class="chart-container">
-                <div class="chart" ></div>
+            <div ref="chartDropdown" style="margin: 16px 0;">
+              <el-select v-model="selectedChart" placeholder="Select Chart to Display" style="width: 250px; margin-bottom: 20px;">
+                <el-option label="All" value="all" />
+                <el-option label="GPA Trends" value="gpa" />
+                <el-option label="Weighted Averages" value="average" />
+              </el-select>
             </div>
-            <div class="bar-chart-container">
-              <div class="avg-bar-chart"></div>
-            </div>
+      <!-- GPA Chart -->
+      <div v-show="selectedChart === 'all' || selectedChart === 'gpa'" class="chart-container">
+        <div class="chart"></div>
+      </div>
+
+      <!-- Weighted Average Chart -->
+      <div v-show="selectedChart === 'all' || selectedChart === 'average'" class="bar-chart-container">
+        <div class="avg-bar-chart"></div>
+      </div>
+    </div>
+    <el-button type="primary" @click="exportDashboardReport" style="margin-bottom: 16px;">
+      Export Dashboard Report
+    </el-button>        
+  </div>
 </template>
 <script>
 import { defineComponent, ref, onMounted } from 'vue';
@@ -20,6 +37,7 @@ import * as echarts from 'echarts';
 import localStore from "@/utils/store.js";
 import api from "@/utils/api.js";
 import _ from 'lodash';
+import html2pdf from 'html2pdf.js';
 
 export default {
   data() {
@@ -29,6 +47,7 @@ export default {
       enrollment: {},
       term: {},
       program: {},
+      selectedChart: 'all',
       chartInstance: null,
       performanceChartOptions: {
         tooltip: {},
@@ -168,6 +187,21 @@ export default {
       const chartDom = document.querySelector('.avg-bar-chart');
       this.barChartInstance = echarts.init(chartDom);
       this.barChartInstance.setOption(this.averageComparisonOptions);
+    },
+    exportDashboardReport() {
+      const element = this.$refs.reportRef;
+      const dropdown = this.$refs.chartDropdown;
+      if (dropdown) dropdown.style.display = 'none';
+      const opt = {
+        margin:       0.5,
+        filename:     `Dashboard_Report_${this.user_id}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save().then(() => {
+        if (dropdown) dropdown.style.display = 'block';
+      });
     }
   }
 };
@@ -175,27 +209,18 @@ export default {
 
 <style scoped>
 
-.chart-container {
-  width: 100%;
-  height: 300px;
-  margin-top: 20px;
-}
-
-.chart {
+.chart-container, .bar-chart-container {
   display: flex;
-  width: 100%;
-  height: 100%;
   justify-content: center;
-}
-
-.bar-chart-container {
+  align-items: center;
   width: 100%;
   height: 300px;
   margin-top: 20px;
+  overflow: visible;
 }
 
-.avg-bar-chart {
-  width: 100%;
+.chart, .avg-bar-chart {
+  width: 50%;
   height: 100%;
 }
 </style>

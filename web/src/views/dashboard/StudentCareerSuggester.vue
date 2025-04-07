@@ -62,7 +62,6 @@ export default {
 
 <style scoped>
 .career-container {
-  padding: 20px;
   max-width: 800px;
   margin: auto;
 }

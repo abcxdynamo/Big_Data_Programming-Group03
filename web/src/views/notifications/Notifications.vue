@@ -19,6 +19,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <p class = "backbtn">Click on logo to go back!</p>
       <el-pagination
         v-if="notifications.length > page_size"
         v-model:current-page="current_page"
@@ -140,6 +141,13 @@ export default {
 }
 .el-table .unread-row {
   font-weight: bold;
+}
+.backbtn{
+  font-size: 12px;
+  font-style: italic;
+  color: #555;
+  margin: 16px 0;
+  text-align: center;
 }
 </style>
 
