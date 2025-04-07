@@ -181,7 +181,9 @@ class CourseService:
                 g.final_gpa,
                 g.feedback grade_feedback,
                 a.id AS attendance_id,
-                a.attendance_in_percent AS attendance_percent
+                a.attendance_in_percent AS attendance_percent,
+                tpc.program_level,
+                tpc.credits
             from term_program_courses tpc
             join terms t on tpc.term_id=t.id
             join programs p on tpc.program_id=p.id
