@@ -81,9 +81,8 @@ export default {
       this.countdown = this.DEFAULT_COUNTDOWN
       const timer = setInterval(() => {
         this.countdown--;
-        if (this.countdown == 0) {
+        if (this.countdown === 0) {
           clearInterval(timer);
-          this.countdown = 60;
         }
       }, 1000);
     },
