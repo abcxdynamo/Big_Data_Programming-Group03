@@ -289,23 +289,35 @@ class TestLogin(unittest.TestCase):
     def test_10_predict_and_update_gpa_no_terms(self, mock_connect, mock_get_training_data):
         """Test predict_and_update_gpa when there are no terms"""
         print(f"{Fore.YELLOW}➤ Testing predict_and_update_gpa_no_terms...{Style.RESET_ALL}", end=" ")
+    
+        try:
+            # Mock training data
+            mock_get_training_data.return_value = pd.DataFrame({
+                'program_id': [1],
+                'program_level': [2],
+                'credits': [3],
+                'attendance_percent': [90],
+                'final_grade': [85],
+                'course_id': [101]
+            })
 
-        mock_get_training_data.return_value = pd.DataFrame({
-            'program_id': [1],
-            'program_level': [2],
-            'credits': [3],
-            'attendance_percent': [90],
-            'final_grade': [85],
-            'course_id': [101]
-        })
+            mock_conn = MagicMock()
+            mock_connect.return_value = mock_conn
 
-        mock_conn = MagicMock()
-        mock_conn.execute.return_value = None
-
-        with patch('pandas.read_sql', return_value=pd.DataFrame({'id': []})):
-            grade_prediction.predict_and_update_gpa()
-            mock_conn.execute.assert_not_called()
-            print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
+            # Mock empty terms data
+            with patch('pandas.read_sql', return_value=pd.DataFrame({'id': []})):
+                grade_prediction.predict_and_update_gpa()
+            
+                # Key assertions
+                mock_conn.execute.assert_not_called()
+                print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
+            
+        except AssertionError:
+            print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
+            raise
+        except Exception as e:
+            print(f"{Fore.RED}ERROR: {str(e)}{Style.RESET_ALL}")
+            raise
             
 if __name__ == '__main__':
     # Create a test suite
