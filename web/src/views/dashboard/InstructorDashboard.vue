@@ -31,6 +31,8 @@
           <el-option label="All" value="all" />
           <el-option label="Average Grades by Course" value="average" />
           <el-option label="Attendance vs Grade" value="attendance" />
+          <el-option label="Top Students per Course" value="topstudents" />
+          <el-option label="Poor Performance Students" value="bottomstudents" />
         </el-select>
       </div>
       <div v-show="selectedChart === 'all' || selectedChart === 'average'" class="chart">
@@ -39,6 +41,12 @@
 
       <div v-show="selectedChart === 'all' || selectedChart === 'attendance'" class="chart">
         <div ref="scatterChart" style="height: 100%; width: 50%;"></div>
+      </div>
+      <div v-show="selectedChart === 'all' || selectedChart === 'topstudents'" class="chart">
+        <div ref="groupedChart" style="height: 100%; width: 50%;"></div>
+      </div>
+      <div v-show="selectedChart === 'all' || selectedChart === 'bottomstudents'" class="chart">
+        <div ref="bottomGroupedChart" style="height: 100%; width: 50%;"></div>
       </div>
     </div>
 
@@ -68,6 +76,8 @@ export default {
       selectedChart: 'all',
       averageGradesChartOptions: {},
       attendanceChartOptions: {},
+      groupedChartOptions: {},
+      bottomGroupedChartOptions: {}
     }
   },
   computed: {},
@@ -78,9 +88,13 @@ export default {
     await this.query_instructor_student_grades();
     this.processAverageGrades();
     this.processAttendanceVsPerformance();
+    this.processTopStudentsPerCourse();
+    this.processBottomStudentsPerCourse();
     this.$nextTick(() => {
       this.renderEChart(this.$refs.avgChart, this.averageGradesChartOptions);
       this.renderEChart(this.$refs.scatterChart, this.attendanceChartOptions);
+      this.renderEChart(this.$refs.groupedChart, this.groupedChartOptions);
+      this.renderEChart(this.$refs.bottomGroupedChart, this.bottomGroupedChartOptions);
     });
   },
   mounted() {
@@ -147,8 +161,8 @@ export default {
           trigger: 'item',
           formatter: '{b}: {c}%'
         },
-        xAxis: { name: 'Courses', type: 'category', data: avgGrades.map(item => item.course) },
-        yAxis: { name: 'Grade', type: 'value', min: 0, max: 100 },
+        xAxis: { name: 'Courses', type: 'category', data: avgGrades.map(item => item.course) , nameLocation: "middle", nameGap: 35},
+        yAxis: { name: 'Grade', type: 'value', min: 0, max: 100 , nameLocation: "middle", nameGap: 35},
         series: [{
           type: 'bar',
           data: avgGrades.map(item => parseFloat(item.avg)),
@@ -165,14 +179,148 @@ export default {
           trigger: 'item',
           formatter: params => `Attendance: ${params.value[0]}%<br/>Grade: ${params.value[1]}%`
         },
-        xAxis: { name: 'Attendance (%)', type: 'value', min: 0, max: 100 },
-        yAxis: { name: 'Grade', type: 'value', min: 0, max: 100 },
+        xAxis: { name: 'Attendance (%)', type: 'value', min: 0, max: 100, nameLocation: "middle", nameGap: 35},
+        yAxis: { name: 'Grade', type: 'value', min: 0, max: 100 , nameLocation: "middle", nameGap: 35},
         series: [{
           symbolSize: 10,
           type: 'scatter',
           data: filtered.map(s => [s.attendance_percent, s.final_grade]),
           itemStyle: { color: '#91cc75' }
         }]
+      };
+    },
+    processTopStudentsPerCourse() {
+      const grouped = _.groupBy(this.student_grades, 'course_name');
+      const courses = Object.keys(grouped);
+
+      // Get top 3 students per course and collect unique names
+      const topStudentsPerCourse = {};
+      const allStudentNames = new Set();
+
+      courses.forEach(course => {
+        const top3 = _.orderBy(grouped[course], 'final_grade', 'desc').slice(0, 3);
+        topStudentsPerCourse[course] = top3;
+        top3.forEach(s => allStudentNames.add(s.student_name));
+      });
+
+      const studentList = Array.from(allStudentNames);
+
+      // Build one series per student (only if they appear in at least one course)
+      const series = studentList.map(student => ({
+        name: student,
+        type: 'bar',
+        data: courses.map(course => {
+          const studentGrade = topStudentsPerCourse[course].find(s => s.student_name === student);
+          return studentGrade ? studentGrade.final_grade : 0;
+        }),
+        barGap: '0%',
+        barCategoryGap: '50%'
+      }));
+
+      this.groupedChartOptions = {
+        title: {
+          text: 'Top 3 Students Per Course',
+          left: 'center',
+          textStyle: { fontSize: 12 }
+        },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        legend: {
+          type: 'scroll',
+          orient: 'vertical',        // Vertical layout
+          left: 'center',            // Center horizontally
+          top: 'middle',             // Middle vertically
+          itemWidth: 10,
+          itemHeight: 10,
+          textStyle: {
+            fontSize: 10
+          },
+          pageIconSize: 10,
+          pageTextStyle: {
+            fontSize: 9
+          }
+        },
+        grid: { left: 60, right: 30, top: 50, bottom: 50 },
+        xAxis: {
+          type: 'category',
+          data: courses,
+          axisLabel: { interval: 0, rotate: 0, fontSize: 10 },
+          name: 'Courses',
+          nameLocation: 'middle',
+          nameGap: 35
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Grade',
+          min: 0,
+          max: 100,
+          nameLocation: 'middle',
+          nameGap: 30
+        },
+        series
+      };
+    },
+    processBottomStudentsPerCourse() {
+      const grouped = _.groupBy(this.student_grades, 'course_name');
+      const courses = Object.keys(grouped);
+
+      const bottomStudentsPerCourse = {};
+      const allStudentNames = new Set();
+
+      courses.forEach(course => {
+        const bottom3 = _.orderBy(grouped[course], 'final_grade', 'asc').slice(0, 3);
+        bottomStudentsPerCourse[course] = bottom3;
+        bottom3.forEach(s => allStudentNames.add(s.student_name));
+      });
+
+      const studentList = Array.from(allStudentNames);
+
+      const series = studentList.map(student => ({
+        name: student,
+        type: 'bar',
+        data: courses.map(course => {
+          const studentGrade = bottomStudentsPerCourse[course].find(s => s.student_name === student);
+          return studentGrade ? studentGrade.final_grade : 0;
+        }),
+        barGap: '0%',
+        barCategoryGap: '50%'
+      }));
+
+      this.bottomGroupedChartOptions = {
+        title: {
+          text: 'Bottom 3 Students Per Course',
+          left: 'center',
+          textStyle: { fontSize: 12 }
+        },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        legend: {
+          type: 'scroll',
+          orient: 'vertical',
+          left: 'center',
+          top: 'middle',
+          itemWidth: 10,
+          itemHeight: 10,
+          textStyle: { fontSize: 10 },
+          pageIconSize: 10,
+          pageTextStyle: { fontSize: 9 }
+        },
+        grid: { left: 60, right: 30, top: 50, bottom: 50 },
+        xAxis: {
+          type: 'category',
+          data: courses,
+          axisLabel: { interval: 0, rotate: 0, fontSize: 10 },
+          name: 'Courses',
+          nameLocation: 'middle',
+          nameGap: 35
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Grade',
+          min: 0,
+          max: 100,
+          nameLocation: 'middle',
+          nameGap: 30
+        },
+        series
       };
     },
     renderEChart(dom, option) {
