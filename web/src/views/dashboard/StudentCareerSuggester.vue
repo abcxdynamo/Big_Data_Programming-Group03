@@ -1,89 +1,80 @@
 <template>
-    <h3>Career Recommendation</h3>
-      <el-alert :title="coop.careerAdvice" type="info" show-icon />
+  <div class="career-container">
+    <h3>Recommended Course</h3>
+    <el-alert v-if="career" type="success" :closable="false" show-icon class="alert">
+      <template #title>You are best suited for a career as a <strong>{{ career }}</strong>.</template>
+    </el-alert>
+    <p class="summary" v-if="career">This recommendation is based on patterns observed in successful graduates from your program. Consider focusing your efforts on building skills aligned with this career path.</p>
+    <el-alert
+      v-if="career && tips[career]"
+      :title="`Pro Tip: ${tips[career]}`"
+      type="info"
+      show-icon
+      class="pro-tip"
+    />
+  </div>
 </template>
-  
+
 <script>
-import { defineComponent, ref, onMounted } from 'vue';
-import * as echarts from 'echarts';
 import localStore from "@/utils/store.js";
 import api from "@/utils/api.js";
-import _ from 'lodash';
 
 export default {
   data() {
     return {
-      coop: {
-        coopPrediction: 85,
-        careerAdvice: 'Consider specializing in AI and Data Science for better opportunities.'
-      },
-    }
-  },
-  computed: {
-
+      user_id: null,
+      career: '',
+      tips: {
+        "Data Scientist": "Strengthen your machine learning, Python, and statistics skills.",
+        "Data Analyst": "Master SQL, Excel, and BI tools like Power BI or Tableau.",
+        "Software Engineer": "Build strong foundations in algorithms and system design.",
+        "Database Administrator": "Focus on SQL performance tuning and backup strategies.",
+        "Cloud Engineer": "Get certified in platforms like AWS, Azure, or GCP.",
+        "Others": "Explore various domains, and talk to an academic or career advisor for personalized paths."
+      }
+    };
   },
   async created() {
     this.user_id = this.$route.params.id || this.get_login_user_id();
-    await this.get_user_info();
-    await this.get_enrollment_info();
-    this.render_charts();
-  },
-  mounted() {
-
+    await this.fetch_prediction();
   },
   methods: {
     get_login_user_id() {
       return JSON.parse(localStore.get("user"))["user_id"];
     },
-    async get_user_info() {
-      this.user_info = await api.get(`/api/users/info/${this.user_id}`);
-    },
-    async get_courses(ids) {
-      const courses = await api.post(`/api/courses/list`, {"ids": ids});
-      return _.reduce(courses, (result, c) => {
-        result[c.id] = c;
-        return result;
-      }, {})
-    },
-    async get_grades(term_id, program_id, student_id) {
-      const grades = await api.get(`/api/grades/${term_id}/${program_id}?student_id=${student_id}`);
-      return _.reduce(grades, (result, g) => {
-        result[g.course_id] = g["final_grade"];
-        return result;
-      }, {})
-    },
-    async get_instructors(instructor_ids) {
-      const instructors = await api.post(`/api/users/list`, {"ids": instructor_ids});
-      return _.reduce(instructors, (result, instructor) => {
-        result[instructor.id] = instructor;
-        return result;
-      }, {});
-    },
+    async fetch_prediction() {
+      try {
+        const response = await api.get(`/api/performance_predictions`);
+        const prediction = response.find(p => p.student_id === this.user_id);
+        if (prediction && prediction.predicted_career) {
+          this.career = prediction.predicted_career;
+        } else {
+          this.career = "Others";
+        }
+      } catch (error) {
+        console.error("Failed to fetch career prediction", error);
+        this.career = "Others";
+      }
+    }
   }
 };
 </script>
 
 <style scoped>
-.student-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.career-container {
   padding: 20px;
+  max-width: 800px;
+  margin: auto;
 }
 
-.student-card {
-  width: 80%;
-  padding: 20px;
+.summary {
+  font-size: 12px;
+  font-weight: bold;
+  font-style: italic;
+  color: #555;
+  margin: 16px 0;
+  text-align: center;
 }
 
-.chart-container {
-  width: 100%;
-  height: 300px;
-  margin-top: 20px;
-}
-
-.chart {
-  width: 100%;
-  height: 100%;
-}
 </style>
+
