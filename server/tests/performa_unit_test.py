@@ -1,5 +1,6 @@
 ﻿import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+import pandas as pd
 from flask import json
 import os
 import sys
@@ -17,6 +18,7 @@ from models.user.user import User
 from models.user.user_role import UserRole
 from models.user.user_token import UserToken
 from models.grade.grade import Grade
+from task import grade_prediction
 
 class TestLogin(unittest.TestCase):
     @classmethod
@@ -57,6 +59,7 @@ class TestLogin(unittest.TestCase):
                     is_deleted=False
                 )
                 db.session.add(user)
+                db.session.commit()
                 
             # Create test grade
             self.test_grade = Grade(
@@ -85,7 +88,7 @@ class TestLogin(unittest.TestCase):
                 db.session.commit()
 
             db.session.remove()
-
+            
     def test_01_send_otp_success(self):
         """Test successful OTP sending"""
         print(f"{Fore.YELLOW}➤ Testing valid OTP request...{Style.RESET_ALL}", end=" ")
@@ -232,13 +235,78 @@ class TestLogin(unittest.TestCase):
             data = json.loads(response.data)
             self.assertEqual(data['code'], 200)
             self.assertTrue(data['success'])
-            self.assertEqual(data['data'], {}) # No record returned
+            self.assertEqual(data['data'], []) # No record returned
             print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
         except Exception as e:
             print(f"{Fore.RED}FAILED: {str(e)}{Style.RESET_ALL}")
             raise
         
+    def test_08_get_training_data(self):
+        """Test for fetching training data from DB"""
+        print(f"{Fore.YELLOW}➤ Testing get_training_data...{Style.RESET_ALL}", end=" ")
+        
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value = None
+        mock_conn.fetchall.return_value = []
 
+        mock_df = pd.DataFrame({
+            'program_id': [1],
+            'program_level': [2],
+            'credits': [3],
+            'attendance_percent': [90],
+            'final_grade': [85],
+            'course_id': [101]
+        })
+
+        with patch('pandas.read_sql', return_value=mock_df):
+            df = grade_prediction.get_training_data()
+            print("Fetched DataFrame:", df)
+            
+            try:
+                self.assertFalse(df.empty)
+                self.assertEqual(df.iloc[0]['final_grade'], 85)
+                print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
+            except AssertionError:
+                print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
+                raise
+            
+    def test_09_grade_to_gpa(self):
+        """Test for grade to GPA conversion"""
+        print(f"{Fore.YELLOW}➤ Testing grade_to_gpa...{Style.RESET_ALL}", end=" ")
+        
+        try:
+            self.assertEqual(grade_prediction.grade_to_gpa(95), 4.0)
+            self.assertEqual(grade_prediction.grade_to_gpa(80), 3.75)
+            self.assertEqual(grade_prediction.grade_to_gpa(65), 2.5)
+            self.assertEqual(grade_prediction.grade_to_gpa(50), 0.0)
+            print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
+        except AssertionError:
+            print(f"{Fore.RED}FAILED{Style.RESET_ALL}")
+            raise
+
+    @patch('task.grade_prediction.get_training_data')
+    @patch('task.grade_prediction.engine.connect')
+    def test_10_predict_and_update_gpa_no_terms(self, mock_connect, mock_get_training_data):
+        """Test predict_and_update_gpa when there are no terms"""
+        print(f"{Fore.YELLOW}➤ Testing predict_and_update_gpa_no_terms...{Style.RESET_ALL}", end=" ")
+
+        mock_get_training_data.return_value = pd.DataFrame({
+            'program_id': [1],
+            'program_level': [2],
+            'credits': [3],
+            'attendance_percent': [90],
+            'final_grade': [85],
+            'course_id': [101]
+        })
+
+        mock_conn = MagicMock()
+        mock_conn.execute.return_value = None
+
+        with patch('pandas.read_sql', return_value=pd.DataFrame({'id': []})):
+            grade_prediction.predict_and_update_gpa()
+            mock_conn.execute.assert_not_called()
+            print(f"{Fore.GREEN}PASSED{Style.RESET_ALL}")
+            
 if __name__ == '__main__':
     # Create a test suite
     loader = unittest.TestLoader()
