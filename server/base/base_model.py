@@ -52,9 +52,9 @@ class BaseModel(db.Model):
 
     query_class = SoftDeleteQuery  # Use the custom query class
 
-    create_time = db.Column(db.DateTime, default=utcnow)
-    update_time = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
-    is_deleted = db.Column(db.Boolean, default=False, nullable=False)
+    create_time = db.Column(db.DateTime, default=utcnow, server_default=text('CURRENT_TIMESTAMP'))
+    update_time = db.Column(db.DateTime, default=utcnow, server_default=text('CURRENT_TIMESTAMP'), onupdate=text('CURRENT_TIMESTAMP'))
+    is_deleted = db.Column(db.Boolean, default=False, server_default=text('0'), nullable=False)
 
     def save(self):
         """ Save the current object to the database """
